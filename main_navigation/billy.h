@@ -13,6 +13,16 @@ conditions d'arrêt : obstacle detectee (return 0) ou checkpoint detectee (ligne
 en fonction de l'historique de la mission en cours et du parametrage, le robot s'arrêtera ou non, s'il
 s'arrete il attend la confirmation du l'utilisateur pour qu'il est le temps de réceptionner le colis avant de redémarrer*/
 
+void avancerMoteurDroit(uint8_t pwm);
+void avancerMoteurGauche(uint8_t pwm);
+void reculerMoteurDroit (uint8_t pwm);
+void reculerMoteurGauche (uint8_t pwm);
+void setPwmEtDirectionMoteurs (int16_t pwmMoteurDroit, int16_t pwmMoteurGauche);
+
+void compterDroit();
+void compterGauche();
+
+
 int eviter_obstacles ();
 
 
