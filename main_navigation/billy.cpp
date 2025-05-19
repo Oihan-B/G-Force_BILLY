@@ -4,6 +4,38 @@
 #include "pins.h"
 
 // -----------------------------------------------------------------------------
+// Suivi Lignes
+// -----------------------------------------------------------------------------
+
+int lectureCapteurLigne(int capteur_id) {
+    return analogRead(capteur_id) ;
+}
+
+void calibrationSuiviLignes(int seuils[5]) {
+    int mesures[5][100]; //100 mesures pour chaque capteur
+	int i, c;
+	
+    for (i = 0; i < 100; i++) {
+        for (c = 0; c < 5; c++) {
+            mesures[c][i] = readCapteur(c);
+        }
+    }
+
+    for (c = 0; c < 5; c++) {
+        int min = mesures[c][0];
+        int max = mesures[c][0];
+        for (i = 1; i < 100; i++) {
+            if (mesures[c][i] < min)
+                min = mesures[c][i];
+            if (mesures[c][i] > max)
+                max = mesures[c][i];
+        }
+        seuils[c] = (max + min) / 2;
+        printf("Capteur %d : min=%d, max=%d, seuil=%d\n", c, min, max, seuils[c]);
+    }
+}
+
+// -----------------------------------------------------------------------------
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 void avancerMoteurDroit(uint8_t pwm) {
@@ -33,22 +65,22 @@ void stopMoteurs() {
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
-void avancer (int16_t pwm){
+void avancer (uint8_t pwm){
   avancerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
 }
 
-void reculer (int16_t pwm){
+void reculer (uint8_t pwm){
   reculerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
 }
 
-void tournerD (int16_t pwm){
+void tournerD (uint8_t pwm){
   avancerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
 }
 
-void tournerG (int16_t pwm){
+void tournerG (uint8_t pwm){
   reculerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
 }

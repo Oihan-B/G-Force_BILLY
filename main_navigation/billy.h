@@ -5,6 +5,8 @@
 #include <stdlib.h>
 
 
+int calibration_suivi_lignes();
+
 
 int suivre_ligne ();
 /*Boucle de suivi de ligne avec appel à la fonction de monitoring toutes les x secondes
@@ -17,7 +19,11 @@ void avancerMoteurDroit(uint8_t pwm);
 void avancerMoteurGauche(uint8_t pwm);
 void reculerMoteurDroit (uint8_t pwm);
 void reculerMoteurGauche (uint8_t pwm);
-void setPwmEtDirectionMoteurs (int16_t pwmMoteurDroit, int16_t pwmMoteurGauche);
+void stopMoteurs();
+void avancer (uint8_t pwm);
+void reculer (uint8_t pwm);
+void tournerD (uint8_t pwm);
+void tournerG (uint8_t pwm);
 
 void compterDroit();
 void compterGauche();
