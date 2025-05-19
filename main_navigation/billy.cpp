@@ -3,11 +3,9 @@
 #include "billy.h"
 #include "pins.h"
 
-
 // -----------------------------------------------------------------------------
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
-
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PW
   digitalWrite(DIRECTIONMOTEURDROIT, LOW);
@@ -19,29 +17,40 @@ void avancerMoteurGauche(uint8_t pwm) {
 }
 
 void reculerMoteurDroit (uint8_t pwm) {
-  analogWrite (PWMMOTEURDROIT, 255-pwm); // Contrôle de vitesse en PWM
+  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
 void reculerMoteurGauche (uint8_t pwm) {
-  analogWrite (PWMMOTEURGAUCHE, 255-pwm); // Contrôle de vitesse en PWM
+  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
 }
 
-void setPwmEtDirectionMoteurs (int16_t pwmMoteurDroit, int16_t pwmMoteurGauche) {
-  if(pwmMoteurDroit>0){
-    avancerMoteurDroit(pwmMoteurDroit);
-  }else if(pwmMoteurDroit<0){
-    reculerMoteurDroit(-pwmMoteurDroit);
-  }
-  if(pwmMoteurGauche>0){
-    avancerMoteurGauche(pwmMoteurGauche);
-  }else if(pwmMoteurGauche<0){
-    reculerMoteurGauche(-pwmMoteurGauche);
-  }
-  if(pwmMoteurDroit==0 && pwmMoteurGauche==0){
-    stopMoteurs();
-  }
+void stopMoteurs() {
+  analogWrite (PWMMOTEURDROIT, 0);
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+  analogWrite (PWMMOTEURGAUCHE, 0);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+}
+
+void avancer (int16_t pwm){
+  avancerMoteurGauche(pwm);
+  avancerMoteurDroit(pwm);
+}
+
+void reculer (int16_t pwm){
+  reculerMoteurGauche(pwm);
+  reculerMoteurDroit(pwm);
+}
+
+void tournerD (int16_t pwm){
+  avancerMoteurGauche(pwm);
+  reculerMoteurDroit(pwm);
+}
+
+void tournerG (int16_t pwm){
+  reculerMoteurGauche(pwm);
+  avancerMoteurDroit(pwm);
 }
 
 // -----------------------------------------------------------------------------
