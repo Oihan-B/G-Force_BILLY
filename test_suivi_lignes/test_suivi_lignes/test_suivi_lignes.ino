@@ -1,5 +1,3 @@
-#include <AFMotor.h>
-
 const int joystickPinX = A0;  // Pin pour l'axe X
 const int joystickPinY = A1;  // Pin pour l'axe Y
 
@@ -9,12 +7,12 @@ const int joystickPinY = A1;  // Pin pour l'axe Y
 #define DIRECTIONMOTEURGAUCHE 4
 #define SPEED 180
 
-#define S1 8
-#define S2 9
-#define S3 10
-#define S4 11
-#define S5 12
-#define CLP 13
+#define S1 A1
+#define S2 A2
+#define S3 A3
+#define S4 A4
+#define S5 A5
+#define CLP A0
 
 void setup() {
   Serial.begin(9600);
@@ -81,35 +79,49 @@ int lectureCapteurLigne(int capteur_id) {
 }
 
 void calibrationSuiviLignes(int seuils[5]) {
+
+  Serial.println("\nDébut phase de CALIBRATION\n");
+  
   int mesures[5][100]; //100 mesures pour chaque capteur
 	int i, c;
 	
   for (i = 0; i < 100; i++) {
     for (c = 0; c < 5; c++) {
         mesures[c][i] = lectureCapteurLigne(c);
+        delay(20);
     }
+    delay(50);
   }
 
   for (c = 0; c < 5; c++) {
     int min = mesures[c][0];
     int max = mesures[c][0];
     for (i = 1; i < 100; i++) {
-      if (mesures[c][i] < min)
-          min = mesures[c][i];
-      if (mesures[c][i] > max)
-          max = mesures[c][i];
+      if (mesures[c][i] < min){
+        min = mesures[c][i];
+      }
+      if (mesures[c][i] > max){
+        max = mesures[c][i];
+      }
     }
     seuils[c] = (max + min) / 2;
+  }
+
+  Serial.println("\nFin phase de CALIBRATION\n");
+  for (c = 0; c < 5; c++) {
+    Serial.println(seuils[c]);
+    Serial.println(" ");
   }
 }
 
 void loop (){
-
+  
   int capteurs[5] = {S1, S2, S3, S4, S5};
-  int seuils[5];
+  int seuils[5] = {512, 512, 512, 512, 512};
   int detections[5];
   int i;
-  calibrationSuiviLignes(seuils);
+
+  //calibrationSuiviLignes(seuils);
 
   while (1){
 
@@ -117,27 +129,23 @@ void loop (){
       if (lectureCapteurLigne(capteurs[i]) > seuils[i]){
         detections[i] = 0; //SOL
       }
-        else{
-      detections[i] = 1; //LIGNE
+      else{
+        detections[i] = 1; //LIGNE
       }
-    }
-
-    for (i = 0; i < 5; i++){
       Serial.println(detections[i]);
+      Serial.println(" ");
     }
-
-    delay(100);
-
-    if (detections[2]) {
+    
+    if (detections[1] && detections[2] && detections[3]) {
+      Serial.println("\nCheckpoint detecte\n");
+    }
+    else if (detections[2]) {
       Serial.println("\nAvancer tout droit\n");
     } 
     else if (detections[3] || detections[4]) {
       Serial.println("\nTourner à droite pour retrouver la ligne\n");
     } 
     else if (detections[0] || detections[1]) {
-      Serial.println("\nTourner à gauche pour retrouver la ligne\n");
-    } 
-    else if (detections[1] && detections[2] && detections[3]) {
       Serial.println("\nTourner à gauche pour retrouver la ligne\n");
     } 
     else {
@@ -147,4 +155,3 @@ void loop (){
   }
 
 }
-
