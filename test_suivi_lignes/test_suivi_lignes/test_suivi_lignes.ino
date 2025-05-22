@@ -77,34 +77,33 @@ void tournerG (int16_t pwm){
 }
 
 int lectureCapteurLigne(int capteur_id) {
-    return analogRead(capteur_id) ;
+  return analogRead(capteur_id);
 }
 
 void calibrationSuiviLignes(int seuils[5]) {
   int mesures[5][100]; //100 mesures pour chaque capteur
 	int i, c;
 	
-    for (i = 0; i < 100; i++) {
-        for (c = 0; c < 5; c++) {
-            mesures[c][i] = lectureCapteurLigne(c);
-        }
-    }
-
+  for (i = 0; i < 100; i++) {
     for (c = 0; c < 5; c++) {
-        int min = mesures[c][0];
-        int max = mesures[c][0];
-        for (i = 1; i < 100; i++) {
-            if (mesures[c][i] < min)
-                min = mesures[c][i];
-            if (mesures[c][i] > max)
-                max = mesures[c][i];
-        }
-        seuils[c] = (max + min) / 2;
-        printf("Capteur %d : min=%d, max=%d, seuil=%d\n", c, min, max, seuils[c]);
+        mesures[c][i] = lectureCapteurLigne(c);
     }
+  }
+
+  for (c = 0; c < 5; c++) {
+    int min = mesures[c][0];
+    int max = mesures[c][0];
+    for (i = 1; i < 100; i++) {
+      if (mesures[c][i] < min)
+          min = mesures[c][i];
+      if (mesures[c][i] > max)
+          max = mesures[c][i];
+    }
+    seuils[c] = (max + min) / 2;
+  }
 }
 
-int main (){
+void loop (){
 
   int capteurs[5] = {S1, S2, S3, S4, S5};
   int seuils[5];
@@ -113,6 +112,7 @@ int main (){
   calibrationSuiviLignes(seuils);
 
   while (1){
+
     for (i = 0; i < 5; i++){
       if (lectureCapteurLigne(capteurs[i]) > seuils[i]){
         detections[i] = 0; //SOL
@@ -122,20 +122,26 @@ int main (){
       }
     }
 
+    for (i = 0; i < 5; i++){
+      Serial.println(detections[i]);
+    }
 
     delay(100);
 
     if (detections[2]) {
-      printf("Avancer tout droit\n");
+      Serial.println("\nAvancer tout droit\n");
     } 
     else if (detections[3] || detections[4]) {
-      printf("Tourner à droite pour retrouver la ligne\n");
+      Serial.println("\nTourner à droite pour retrouver la ligne\n");
     } 
     else if (detections[0] || detections[1]) {
-      printf("Tourner à gauche pour retrouver la ligne\n");
+      Serial.println("\nTourner à gauche pour retrouver la ligne\n");
+    } 
+    else if (detections[1] && detections[2] && detections[3]) {
+      Serial.println("\nTourner à gauche pour retrouver la ligne\n");
     } 
     else {
-      printf("Ligne perdue : STOP ou reculer\n");
+      Serial.println("\nLigne perdue : STOP ou reculer\n");
     }
 
   }
