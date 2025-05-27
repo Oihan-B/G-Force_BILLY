@@ -1,11 +1,9 @@
-const int joystickPinX = A0;  // Pin pour l'axe X
-const int joystickPinY = A1;  // Pin pour l'axe Y
-
-#define PWMMOTEURDROIT 6
-#define DIRECTIONMOTEURDROIT 7
-#define PWMMOTEURGAUCHE 5
-#define DIRECTIONMOTEURGAUCHE 4
-#define SPEED 180
+#define PWMMOTEURDROIT 9
+#define DIRECTIONMOTEURDROIT 10
+#define PWMMOTEURGAUCHE 11
+#define DIRECTIONMOTEURGAUCHE 12
+#define SPEED 120
+#define TURN_SPEED 120
 
 #define S1 A1
 #define S2 A2
@@ -115,7 +113,7 @@ void calibrationSuiviLignes(int seuils[5]) {
 }
 
 void loop (){
-  
+
   int capteurs[5] = {S1, S2, S3, S4, S5};
   int seuils[5] = {512, 512, 512, 512, 512};
   int detections[5];
@@ -123,7 +121,12 @@ void loop (){
 
   //calibrationSuiviLignes(seuils);
 
+  avancer(SPEED);
+  delay(500);
+
   while (1){
+
+    int c_avancer = 0, c_tournerD = 0, c_tournerG = 0;
 
     for (i = 0; i < 5; i++){
       if (lectureCapteurLigne(capteurs[i]) > seuils[i]){
@@ -138,20 +141,45 @@ void loop (){
     
     if (detections[1] && detections[2] && detections[3]) {
       Serial.println("\nCheckpoint detecte\n");
+      stopMoteurs();
     }
-    else if (detections[2]) {
-      Serial.println("\nAvancer tout droit\n");
-    } 
+
     else if (detections[3] || detections[4]) {
       Serial.println("\nTourner à droite pour retrouver la ligne\n");
+      /*c_tournerD += 1;
+
+      if (c_tournerD > 1){
+        tournerD(TURN_SPEED);
+        c_tournerD = 0;
+      }*/
+      tournerD(TURN_SPEED);
     } 
+
     else if (detections[0] || detections[1]) {
       Serial.println("\nTourner à gauche pour retrouver la ligne\n");
+      /*c_tournerG += 1;
+
+      if (c_tournerG > 1){
+        tournerG(TURN_SPEED);
+        c_tournerG = 0;
+      }*/
+      tournerG(TURN_SPEED);
     } 
+
+    else if (detections[2]) {
+      Serial.println("\nAvancer tout droit\n");
+      /*c_avancer += 1;
+
+      if (c_avancer > 1){
+        avancer(SPEED);
+        c_avancer = 0;
+      }*/
+      avancer(SPEED);
+    } 
+
     else {
       Serial.println("\nLigne perdue : STOP ou reculer\n");
+      stopMoteurs();
     }
-
   }
-
 }
