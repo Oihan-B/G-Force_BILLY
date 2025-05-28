@@ -1,16 +1,18 @@
-#define PWMMOTEURDROIT 9
-#define DIRECTIONMOTEURDROIT 10
-#define PWMMOTEURGAUCHE 11
-#define DIRECTIONMOTEURGAUCHE 12
-#define SPEED 120
-#define TURN_SPEED 120
+#define PWMMOTEURDROIT 23
+#define DIRECTIONMOTEURDROIT 21
 
-#define S1 A1
-#define S2 A2
-#define S3 A3
-#define S4 A4
-#define S5 A5
-#define CLP A0
+#define PWMMOTEURGAUCHE 22
+#define DIRECTIONMOTEURGAUCHE 20
+
+#define SPEED 100
+#define TURN_SPEED 100
+
+#define S1 24
+#define S2 25
+#define S3 14
+#define S4 15
+#define S5 17
+#define CLP 16
 
 void setup() {
   Serial.begin(9600);
@@ -121,9 +123,6 @@ void loop (){
 
   //calibrationSuiviLignes(seuils);
 
-  avancer(SPEED);
-  delay(500);
-
   while (1){
 
     int c_avancer = 0, c_tournerD = 0, c_tournerG = 0;
@@ -144,37 +143,34 @@ void loop (){
       stopMoteurs();
     }
 
-    else if (detections[3] || detections[4]) {
-      Serial.println("\nTourner à droite pour retrouver la ligne\n");
-      /*c_tournerD += 1;
-
-      if (c_tournerD > 1){
-        tournerD(TURN_SPEED);
-        c_tournerD = 0;
-      }*/
-      tournerD(TURN_SPEED);
-    } 
-
-    else if (detections[0] || detections[1]) {
-      Serial.println("\nTourner à gauche pour retrouver la ligne\n");
-      /*c_tournerG += 1;
-
-      if (c_tournerG > 1){
-        tournerG(TURN_SPEED);
-        c_tournerG = 0;
-      }*/
-      tournerG(TURN_SPEED);
-    } 
-
     else if (detections[2]) {
       Serial.println("\nAvancer tout droit\n");
-      /*c_avancer += 1;
+      c_avancer += 1;
 
       if (c_avancer > 1){
         avancer(SPEED);
         c_avancer = 0;
-      }*/
-      avancer(SPEED);
+      }
+    } 
+
+    else if (detections[3] || detections[4]) {
+      Serial.println("\nTourner à droite pour retrouver la ligne\n");
+      c_tournerD += 1;
+
+      if (c_tournerD > 1){
+        tournerD(TURN_SPEED);
+        c_tournerD = 0;
+      }
+    } 
+
+    else if (detections[0] || detections[1]) {
+      Serial.println("\nTourner à gauche pour retrouver la ligne\n");
+      c_tournerG += 1;
+
+      if (c_tournerG > 1){
+        tournerG(TURN_SPEED);
+        c_tournerG = 0;
+      }
     } 
 
     else {
