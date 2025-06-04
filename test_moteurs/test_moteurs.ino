@@ -1,12 +1,11 @@
+#define PWMMOTEURDROIT 23
+#define DIRECTIONMOTEURDROIT 21
 
-#define joystickPinX 
-#define joystickPinY 
+#define PWMMOTEURGAUCHE 22
+#define DIRECTIONMOTEURGAUCHE 20
 
-#define PWMMOTEURDROIT 6
-#define DIRECTIONMOTEURDROIT 7
-#define PWMMOTEURGAUCHE 5
-#define DIRECTIONMOTEURGAUCHE 4
-#define SPEED 180
+#define SPEED 100
+#define TURN_SPEED 100
 
 void setup() {
   Serial.begin(9600);
@@ -14,24 +13,8 @@ void setup() {
   pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
 }
 
-int choix_joystick() {
-  int valeurX = analogRead(joystickPinX);
-  int valeurY = analogRead(joystickPinY);
- 
-  if (valeurY < 350) {
-    return 1; // Avancer
-  } else if (valeurY > 650) {
-    return 2; // Reculer
-  } else if (valeurX < 350) {
-    return 3; // Tourner à gauche
-  } else if (valeurX > 650) {
-    return 4; // Tourner à droite
-  }
-  return 0; // Repos
-}
-
 void avancerMoteurDroit(uint8_t pwm) {
-  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PW
+  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, LOW);
 }
 
@@ -77,31 +60,28 @@ void tournerG (int16_t pwm){
   avancerMoteurDroit(pwm);
 }
 
-void loop() {
-  delay(50);
+void loop(){
 
-  int direction = choix_joystick();
+  stopMoteurs();
+  delay(1000);
 
-  switch (direction) {
-    case 1:
-      avancer(SPEED);
-      Serial.println("AVANCER");
-      break;
-    case 2:
-      reculer(SPEED);
-      Serial.println("RECULER");
-      break;
-    case 3:
-      tournerG(SPEED);
-      Serial.println("TOURNER GAUCHE");
-      break;
-    case 4:
-      tournerD(SPEED);
-      Serial.println("TOURNER DROITE");
-      break;
-    default:
-      stopMoteurs();
-      Serial.println("REPOS");
-      break;
-  }
+  avancer(SPEED);
+  delay(2000);
+  stopMoteurs();
+  delay(1000);
+
+  tournerD(SPEED);
+  delay(2000);
+  stopMoteurs();
+  delay(1000);
+
+  tournerG(SPEED);
+  delay(2000);
+  stopMoteurs();
+  delay(1000);
+
+  reculer(SPEED);
+  delay(2000);
+  stopMoteurs();
+  delay(1000);
 }
