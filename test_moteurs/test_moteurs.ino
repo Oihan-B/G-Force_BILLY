@@ -15,22 +15,22 @@ void setup() {
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
 void avancerMoteurGauche(uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
 }
 
 void reculerMoteurDroit (uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
 }
 
 void reculerMoteurGauche (uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
 void stopMoteurs() {

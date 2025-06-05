@@ -39,23 +39,23 @@ void calibrationSuiviLignes(int seuils[5]) {
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 void avancerMoteurDroit(uint8_t pwm) {
-  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PW
-  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
-}
-
-void avancerMoteurGauche(uint8_t pwm) {
-  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
-}
-
-void reculerMoteurDroit (uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
-void reculerMoteurGauche (uint8_t pwm) {
+void avancerMoteurGauche(uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+}
+
+void reculerMoteurDroit (uint8_t pwm) {
+  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+}
+
+void reculerMoteurGauche (uint8_t pwm) {
+  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
 void stopMoteurs() {
