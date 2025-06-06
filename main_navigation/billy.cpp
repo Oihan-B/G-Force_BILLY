@@ -3,41 +3,73 @@
 #include "billy.h"
 #include "pins.h"
 
+
+// -----------------------------------------------------------------------------
+// Detection Obstacles
+// -----------------------------------------------------------------------------
+
+
+void initCapteurUltrason(){
+  int i;
+  int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
+
+  for (i = 0; i < 4; i++) {
+    pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
+  }
+
+  pinMode(TRIGGER, OUTPUT);
+}
+
+float lectureCapteurUltrason(int capteur) {
+  unsigned long duree;
+  float distance_cm;
+
+  digitalWrite(TRIGGER, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER, LOW);
+
+  duree = pulseIn(capteur, HIGH, 30000UL);
+
+  distance_cm = duree * 0.034f / 2.0f;
+
+  if (distance_cm < 0 || distance_cm > 50){
+    distance_cm = 0;
+  }
+
+  return distance_cm;
+}
+
+void contournerObstacle(){
+  int detections[4]  = {0,0,0,0}; // CG AG AD CD
+}
+
+
 // -----------------------------------------------------------------------------
 // Suivi Lignes
 // -----------------------------------------------------------------------------
 
+
+void initSuiviLigne(){
+  int capteurs[5] = {S1, S2, S3, S4, S5};
+  int i;
+
+  for (i = 0; i < 5; i++) {
+    pinMode(capteurs[i], INPUT_PULLUP);
+  }
+}
+
 int lectureCapteurLigne(int capteur_id) {
-    return analogRead(capteur_id) ;
+    return digitalRead(capteur_id) ;
 }
 
-void calibrationSuiviLignes(int seuils[5]) {
-    int mesures[5][100]; //100 mesures pour chaque capteur
-	int i, c;
-	
-    for (i = 0; i < 100; i++) {
-        for (c = 0; c < 5; c++) {
-            mesures[c][i] = readCapteur(c);
-        }
-    }
-
-    for (c = 0; c < 5; c++) {
-        int min = mesures[c][0];
-        int max = mesures[c][0];
-        for (i = 1; i < 100; i++) {
-            if (mesures[c][i] < min)
-                min = mesures[c][i];
-            if (mesures[c][i] > max)
-                max = mesures[c][i];
-        }
-        seuils[c] = (max + min) / 2;
-        printf("Capteur %d : min=%d, max=%d, seuil=%d\n", c, min, max, seuils[c]);
-    }
-}
 
 // -----------------------------------------------------------------------------
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
+
+
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
@@ -85,9 +117,11 @@ void tournerG (uint8_t pwm){
   avancerMoteurDroit(pwm);
 }
 
+
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie
 // -----------------------------------------------------------------------------
+
 
 void compterDroit() {
   
@@ -107,3 +141,13 @@ void compterGauche() {
   }
   distGauche=((pi*D_roue)/nb_tic)*compteGauche;
 }
+
+
+// -----------------------------------------------------------------------------
+// Monitoring ESP32
+// -----------------------------------------------------------------------------
+
+void monitoring (){
+  
+}
+/*collecte de toutes les données relatives au robot et à la mission et actualisation du site web de supervision*/
