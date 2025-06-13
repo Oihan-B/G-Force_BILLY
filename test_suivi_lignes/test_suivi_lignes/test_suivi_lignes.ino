@@ -67,22 +67,22 @@ float lectureCapteurUltrason(int capteur) {
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
 }
 
 void avancerMoteurGauche(uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
 void reculerMoteurDroit (uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
 void reculerMoteurGauche (uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
 }
 
 void stopMoteurs() {
@@ -140,7 +140,7 @@ void loop (){
     Serial.println("\n");
     */
     // TEST CAPTEURS ULTRASON
-
+    /*
     float val_ultrasons[4];
 
     for (i = 0; i < 4; i++){
@@ -153,9 +153,9 @@ void loop (){
       Serial.println(val_ultrasons[i]);
     }
     Serial.println("\n");
-
+    */
     // TEST SUIVI DE LIGNES
-/*
+
     int c_avancer = 0, c_tournerD = 0, c_tournerG = 0;
 
     delay(500);
@@ -163,6 +163,8 @@ void loop (){
     for (i = 0; i < 5; i++){
       detections[i] = digitalRead(capteurs[i]); // 0 SOL // 1 LIGNE
     }
+
+    detections[0] = 0; // Il marche pas 
 
     for (i = 0; i < 5; i++){
       Serial.println(detections[i]);
@@ -178,7 +180,7 @@ void loop (){
       c_avancer += 1;
 
       if (c_avancer > 1){
-        //avancer(SPEED);
+        avancer(SPEED);
         c_avancer = 0;
       }
     } 
@@ -188,7 +190,7 @@ void loop (){
       c_tournerD += 1;
 
       if (c_tournerD > 1){
-        //tournerD(TURN_SPEED);
+        tournerD(TURN_SPEED);
         c_tournerD = 0;
       }
     } 
@@ -198,7 +200,7 @@ void loop (){
       c_tournerG += 1;
 
       if (c_tournerG > 1){
-        //tournerG(TURN_SPEED);
+        tournerG(TURN_SPEED);
         c_tournerG = 0;
       }
     } 
@@ -207,6 +209,5 @@ void loop (){
       Serial.println("\nLigne perdue : STOP ou reculer\n");
       stopMoteurs();
     }
-  */
   }
 }
