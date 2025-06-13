@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <PID_v1.h>   // Pour le PID
-#include <MsTimer2.h> // Pour le timer 2
 #include "billy.h"
 #include "pins.h"
  
@@ -75,7 +74,8 @@ PID pidGauche(&vitesseGauche, &pwm_Gauche, &consigneGauche, Kp, Ki, Kd, DIRECT);
 // Timer
 // -----------------------------------------------------------------------------
 
-#define TIMERINTERVALE 20 // ms
+IntervalTimer myTimer;
+#define TIMERINTERVALE 20000 // ms
  
 // -----------------------------------------------------------------------------
 // Definitions des menus (sans accents)
@@ -181,8 +181,7 @@ void setup(){
   initEncodeurs();
   initPid();
 
-  MsTimer2::set(TIMERINTERVALE, interruptionTimer);
-  MsTimer2::start();
+  myTimer.begin(interruptionTimer, TIMERINTERVALE);
  
   // Message de bienvenue
   lcd.clear();
