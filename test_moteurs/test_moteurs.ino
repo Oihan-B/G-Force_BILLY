@@ -7,10 +7,63 @@
 #define SPEED 100
 #define TURN_SPEED 100
 
-void setup() {
-  Serial.begin(9600);
+
+
+
+#define ENTRAXE 260 // A MESURER
+#define NB_TIC 1560.0 // Nombre de tic par tour de roue
+#define D_ROUE 100 // Diametre roue
+
+
+
+IntervalTimer myTimer;
+#define TIMERINTERVALE 20000 // ms
+
+volatile double pi=3.14159265358979323846264338327950288419716939937510;
+
+volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
+volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
+volatile double distDroit=0;
+volatile double distGauche=0;
+volatile double vitesseDroit = 0;  // vitesse du moteur en tics
+volatile double vitesseGauche = 0; // vitesse du moteur en tics
+volatile double pwm_Droit=60;
+volatile double pwm_Gauche=60;
+volatile double intervalle=0.2;
+
+volatile double distanceTotal = 0; //mm
+volatile double angleTotal = 0; // radian
+
+volatile double x = 0; //mm 
+volatile double y = 0; //mm
+volatile double theta = 0; // radian entre -Pi et Pi
+
+
+
+
+void initEncodeurs() {
+  pinMode(ENCODEURDROITA, INPUT);
+  pinMode(ENCODEURDROITB, INPUT);
+  pinMode(ENCODEURGAUCHEA, INPUT);
+  pinMode(ENCODEURGAUCHEB, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODEURDROITA), compterDroit, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODEURGAUCHEA), compterGauche, CHANGE);
+}
+
+void initMoteurs () {
+  pinMode(PWMMOTEURDROIT, OUTPUT);
+  pinMode(PWMMOTEURGAUCHE, OUTPUT);
   pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
   pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
+}
+
+
+void setup() {
+  Serial.begin(9600);
+  initEncodeurs();
+  initMoteurs();
+
+  myTimer.begin(interruptionTimer, TIMERINTERVALE);
 }
 
 void avancerMoteurDroit(uint8_t pwm) {
@@ -60,28 +113,58 @@ void tournerG (int16_t pwm){
   avancerMoteurDroit(pwm);
 }
 
+
+void interruptionTimer(){
+  
+    //Calcul des vitesses, position et angle du robot  
+    vitesseDroit=((compteDroit*50)/(NB_TIC));
+    vitesseGauche=((compteGauche*50)/(NB_TIC));
+    
+    distMoy=(distDroit+distGauche)/2;
+    distanceTotal+=distMoy;
+    if(distDroit>distGauche || distGauche>distDroit){
+      dist=distDroit-distGauche;
+      theta = dist/entraxe;
+    }
+    angleTotal+=theta;
+    if(angleTotal>pi){
+      angleTotal-=2*pi;
+    }else if(angleTotal<-pi){
+      angleTotal+=2*pi;
+    }
+    x+=distMoy*cos(angleTotal);
+    y+=distMoy*sin(angleTotal);
+    compteDroit=0;
+    compteGauche=0;
+}
+
+
+void compterDroit() {
+  
+  if(digitalRead(ENCODEURDROITA) == digitalRead(ENCODEURDROITB)){
+    compteDroit++;
+  }else {
+    compteDroit--;
+  }
+  distDroit=((pi*D_ROUE)/NB_TIC)*compteDroit;
+}
+
+void compterGauche() {
+  if(digitalRead(ENCODEURGAUCHEA) == digitalRead(ENCODEURGAUCHEB)){
+    compteGauche--;
+  }else{
+    compteGauche++;
+  }
+  distGauche=((pi*D_ROUE)/NB_TIC)*compteGauche;
+}
+
+
 void loop(){
-
-  stopMoteurs();
-  delay(1000);
-
-  avancer(SPEED);
-  delay(2000);
-  stopMoteurs();
-  delay(1000);
-
-  tournerD(SPEED);
-  delay(2000);
-  stopMoteurs();
-  delay(1000);
-
-  tournerG(SPEED);
-  delay(2000);
-  stopMoteurs();
-  delay(1000);
-
-  reculer(SPEED);
-  delay(2000);
-  stopMoteurs();
-  delay(1000);
+  if(vitesseDroit>0){
+    Serial.println("D");
+  }
+  if(vitesseGauche>0){
+    Serial.println("G");
+  }
+  
 }

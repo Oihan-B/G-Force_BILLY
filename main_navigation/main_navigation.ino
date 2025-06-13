@@ -39,7 +39,7 @@ volatile double distMoy=0;
 // -----------------------------------------------------------------------------
 
 #define ENTRAXE 260 // A MESURER
-#define NB_TIC 520 // Nombre de tic par tour de roue
+#define NB_TIC 1560 // Nombre de tic par tour de roue
 #define D_ROUE 100 // Diametre roue
 
 volatile double distanceTotal = 0; //mm
