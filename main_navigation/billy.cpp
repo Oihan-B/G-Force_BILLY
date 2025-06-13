@@ -41,7 +41,7 @@ float lectureCapteurUltrason(int capteur) {
   return distance_cm;
 }
 
-void contournerObstacle(){
+void contournerObstacle(int marge){
   int detections[4]  = {0,0,0,0}; // CG AG AD CD
 }
 
@@ -63,6 +63,40 @@ void initSuiviLigne(){
 int lectureCapteurLigne(int capteur_id) {
     return digitalRead(capteur_id) ;
 }
+
+char suiviLigne(){ 
+
+  int detections[5];
+
+  for (i = 0; i < 5; i++){
+    detections[i] = lectureCapteurLigne(i)); // 0 SOL // 1 LIGNE
+  }
+
+  if (detections[1] && detections[2] && detections[3]) {
+    return "C";
+  }
+
+  else if (detections[2]) {
+    return "A";
+  } 
+
+  else if (detections[3] || detections[4]) {
+    return "D";
+  } 
+
+  else if (detections[0] || detections[1]) {
+    return "G";
+  } 
+
+  else {
+    return "S";
+  }
+}
+// A (avancer en suivant la ligne)
+// D (se décaler vers la droite pour récupérer la ligne)
+// G (se décaler vers la gauche pour récupérer la ligne)
+// S (s'arrêter car ligne perdue)
+// C (s'arrêter car checkpoint detectée)
 
 
 // -----------------------------------------------------------------------------
@@ -117,10 +151,72 @@ void tournerG (uint8_t pwm){
   avancerMoteurDroit(pwm);
 }
 
+// -----------------------------------------------------------------------------
+// Variables Odometrie
+// -----------------------------------------------------------------------------
+
+#define ENTRAXE 320 // A MESURER
+#define NB_TIC 1560.0 // Nombre de tic par tour de roue
+#define D_ROUE 100 // Diametre roue
+#define TIMERINTERVALE 20000 // ms
+
+IntervalTimer myTimer;
+
+volatile double pi=3.14;
+volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
+volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
+volatile double dist=0;
+volatile double distMoy=0;
+volatile double distDroit=0;
+volatile double distGauche=0;
+volatile double vitesseDroit = 0;  // vitesse du moteur en tics
+volatile double vitesseGauche = 0; // vitesse du moteur en tics
+volatile double pwm_Droit=60;
+volatile double pwm_Gauche=60;
+volatile double intervalle=0.2;
+volatile double distanceTotal = 0; //mm
+volatile double angleTotal = 0; // radian
+volatile double x = 0; //mm 
+volatile double y = 0; //mm
+volatile double theta = 0; // radian entre -Pi et Pi
 
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie
 // -----------------------------------------------------------------------------
+
+void initEncodeurs() {
+  myTimer.begin(interruptionTimer, TIMERINTERVALE);
+  pinMode(ENCODEURDROITA, INPUT);
+  pinMode(ENCODEURDROITB, INPUT);
+  pinMode(ENCODEURGAUCHEA, INPUT);
+  pinMode(ENCODEURGAUCHEB, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODEURDROITA), compterDroit, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODEURGAUCHEA), compterGauche, CHANGE);
+}
+
+void interruptionTimer(){
+  
+    //Calcul des vitesses, position et angle du robot  
+    vitesseDroit=((compteDroit*50)/(NB_TIC));
+    vitesseGauche=((compteGauche*50)/(NB_TIC));
+    
+    distMoy=(distDroit+distGauche)/2;
+    distanceTotal+=distMoy;
+    if(distDroit>distGauche || distGauche>distDroit){
+      dist=distDroit-distGauche;
+      theta = dist/ENTRAXE;
+    }
+    angleTotal+=theta;
+    if(angleTotal>pi){
+      angleTotal-=2*pi;
+    }else if(angleTotal<-pi){
+      angleTotal+=2*pi;
+    }
+    x+=distMoy*cos(angleTotal);
+    y+=distMoy*sin(angleTotal);
+    compteDroit=0;
+    compteGauche=0;
+}
 
 
 void compterDroit() {
@@ -130,7 +226,7 @@ void compterDroit() {
   }else {
     compteDroit--;
   }
-  distDroit=((pi*D_roue)/nb_tic)*compteDroit;
+  distDroit=((pi*D_ROUE)/NB_TIC)*compteDroit;
 }
 
 void compterGauche() {
@@ -139,7 +235,7 @@ void compterGauche() {
   }else{
     compteGauche++;
   }
-  distGauche=((pi*D_roue)/nb_tic)*compteGauche;
+  distGauche=((pi*D_ROUE)/NB_TIC)*compteGauche;
 }
 
 
@@ -151,3 +247,16 @@ void monitoring (){
   
 }
 /*collecte de toutes les données relatives au robot et à la mission et actualisation du site web de supervision*/
+
+// -----------------------------------------------------------------------------
+// GYRO
+// -----------------------------------------------------------------------------
+
+void gyro (uint8_t etat){
+  if (etat == 1){
+    digitalWrite(GYROPHARE, HIGH);
+  }
+  else {
+    digitalWrite(GYROPHARE, HIGH);
+  }
+}

@@ -11,7 +11,7 @@
 
 void initCapteurUltrason();
 float lectureCapteurUltrason(uint8_t capteur);
-void contournerObstacle();
+void contournerObstacle(uint8_t marge);
 
 
 // -----------------------------------------------------------------------------
@@ -19,13 +19,13 @@ void contournerObstacle();
 // -----------------------------------------------------------------------------
 
 void initSuiviLigne();
-int suivre_ligne ();
-/*Boucle de suivi de ligne avec appel à la fonction de monitoring toutes les x secondes
-et vérificationdes inputs en permanence pour une pause d'urgence
-conditions d'arrêt : obstacle detectee (return 0) ou checkpoint detectee (ligne large)(return 1)
-en fonction de l'historique de la mission en cours et du parametrage, le robot s'arrêtera ou non, s'il
-s'arrete il attend la confirmation du l'utilisateur pour qu'il est le temps de réceptionner le colis avant de redémarrer*/
+char suiviLigne (); 
 
+// A (avancer en suivant la ligne)
+// D (se décaler vers la droite pour récupérer la ligne)
+// G (se décaler vers la gauche pour récupérer la ligne)
+// S (s'arrêter car ligne perdue)
+// C (s'arrêter car checkpoint detectée)
 
 // -----------------------------------------------------------------------------
 // Commandes Moteurs
@@ -47,6 +47,8 @@ void tournerG (uint8_t pwm);
 // Fonctions Odometrie
 // -----------------------------------------------------------------------------
 
+void initEncodeurs()
+void interruptionTimer()
 void compterDroit();
 void compterGauche();
 
@@ -56,5 +58,12 @@ void compterGauche();
 
 void monitoring ();
 /*collecte de toutes les données relatives au robot et à la mission et actualisation du site web de supervision*/
+
+// -----------------------------------------------------------------------------
+// GYRO
+// -----------------------------------------------------------------------------
+
+void gyro (uint8_t etat);
+
 
 #endif

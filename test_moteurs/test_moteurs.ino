@@ -1,8 +1,15 @@
 #define PWMMOTEURDROIT 23
 #define DIRECTIONMOTEURDROIT 21
 
+#define ENCODEURDROITA 24
+#define ENCODEURDROITB 25
+
+
 #define PWMMOTEURGAUCHE 22
 #define DIRECTIONMOTEURGAUCHE 20
+
+#define ENCODEURGAUCHEA 29
+#define ENCODEURGAUCHEB 28
 
 #define SPEED 100
 #define TURN_SPEED 100
@@ -10,7 +17,7 @@
 
 
 
-#define ENTRAXE 260 // A MESURER
+#define ENTRAXE 320 // A MESURER
 #define NB_TIC 1560.0 // Nombre de tic par tour de roue
 #define D_ROUE 100 // Diametre roue
 
@@ -19,10 +26,12 @@
 IntervalTimer myTimer;
 #define TIMERINTERVALE 20000 // ms
 
-volatile double pi=3.14159265358979323846264338327950288419716939937510;
+volatile double pi=3.14;
 
 volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
 volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
+volatile double dist=0;
+volatile double distMoy=0;
 volatile double distDroit=0;
 volatile double distGauche=0;
 volatile double vitesseDroit = 0;  // vitesse du moteur en tics
@@ -124,7 +133,7 @@ void interruptionTimer(){
     distanceTotal+=distMoy;
     if(distDroit>distGauche || distGauche>distDroit){
       dist=distDroit-distGauche;
-      theta = dist/entraxe;
+      theta = dist/ENTRAXE;
     }
     angleTotal+=theta;
     if(angleTotal>pi){
@@ -160,6 +169,9 @@ void compterGauche() {
 
 
 void loop(){
+
+  reculer(100);
+
   if(vitesseDroit>0){
     Serial.print("D : ");
     Serial.println(vitesseDroit);
@@ -168,5 +180,5 @@ void loop(){
     Serial.print("G : ");
     Serial.println(vitesseGauche);
   }
-  
+
 }

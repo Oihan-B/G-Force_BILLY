@@ -1,85 +1,22 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <PID_v1.h>   // Pour le PID
 #include "billy.h"
 #include "pins.h"
  
-// -----------------------------------------------------------------------------
-// Configuration LCD et boutons
-// -----------------------------------------------------------------------------
+
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-const int boutons[] = {4, 5, 6, 7};  // 4=haut,5=bas,6=valider,7=retour
+const int boutons[] = {BOUTON_HAUT, BOUTON_BAS, BOUTON_CONF, BOUTON_RET};  
 const int NB_BOUTONS = 4;
- 
+
 // -----------------------------------------------------------------------------
-// Etat de navigation et cases a cocher
+// Definitions des menus 
 // -----------------------------------------------------------------------------
+
 bool    enSousMenu   = false;
 uint8_t selMenu      = 0;      // 0..3
 uint8_t selSous      = 0;      // index dans le sous-menu
 bool    etatParam[4] = {0,0,0,0};
 
-// -----------------------------------------------------------------------------
-// Encodeurs
-// -----------------------------------------------------------------------------
-
-volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
-volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
-volatile double distDroit=0;
-volatile double distGauche=0;
-volatile double vitesseDroit = 0;  // vitesse du moteur en tics
-volatile double vitesseGauche = 0; // vitesse du moteur en tics
-volatile double pwm_Droit=60;
-volatile double pwm_Gauche=60;
-volatile double dist=0;
-volatile double distMoy=0;
-
-// -----------------------------------------------------------------------------
-// Position / Odometrie
-// -----------------------------------------------------------------------------
-
-#define ENTRAXE 260 // A MESURER
-#define NB_TIC 1560 // Nombre de tic par tour de roue
-#define D_ROUE 100 // Diametre roue
-
-volatile double distanceTotal = 0; //mm
-volatile double angleTotal = 0; // radian
-
-volatile double x = 0; //mm 
-volatile double y = 0; //mm
-volatile double theta = 0; // radian entre -Pi et Pi
-
-// -----------------------------------------------------------------------------
-// PID
-// -----------------------------------------------------------------------------
-
-double consigneDroit = 0;
-double consigneGauche = 0;
- 
-double Kp = 70;
-double Ki = 5;
-double Kd = 2;
- 
-PID pidDroit(&vitesseDroit, &pwm_Droit, &consigneDroit, Kp, Ki, Kd, DIRECT);
-PID pidGauche(&vitesseGauche, &pwm_Gauche, &consigneGauche, Kp, Ki, Kd, DIRECT);
-
-// -----------------------------------------------------------------------------
-// ESP32
-// -----------------------------------------------------------------------------
-
-#define ESP_RX 7
-#define ESP_TX 8
-
-// -----------------------------------------------------------------------------
-// Timer
-// -----------------------------------------------------------------------------
-
-IntervalTimer myTimer;
-#define TIMERINTERVALE 20000 // ms
- 
-// -----------------------------------------------------------------------------
-// Definitions des menus (sans accents)
-// -----------------------------------------------------------------------------
 const int NB_MENU = 4;
 const char* menuPrincipal[NB_MENU] = {
   "Param mission",
@@ -111,8 +48,9 @@ const char** tousSousMenus[NB_MENU] = {
 };
  
 // -----------------------------------------------------------------------------
-// Prototypes
+// Prototypes Fonctions
 // -----------------------------------------------------------------------------
+
 int  bouton_presse();
 void rafraichirMenu();
 void boutonHaut();
@@ -120,7 +58,6 @@ void boutonBas();
 void boutonValider();
 void boutonRetour();
  
-// Stubs d'actions pour les autres menus
 void actionTest1()     {}
 void actionTest2()     {}
 void actionTest3()     {}
@@ -143,47 +80,11 @@ void (*actionSousMenu[NB_MENU][9])() = {
   { actionCalibration }
 };
 
-// -----------------------------------------------------------------------------
-// Init
-// -----------------------------------------------------------------------------
 
-void initMoteurs () {
-  pinMode(PWMMOTEURDROIT, OUTPUT);
-  pinMode(PWMMOTEURGAUCHE, OUTPUT);
-  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
-  pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
-}
-
-void initEncodeurs() {
-  pinMode(ENCODEURDROITA, INPUT);
-  pinMode(ENCODEURDROITB, INPUT);
-  pinMode(ENCODEURGAUCHEA, INPUT);
-  pinMode(ENCODEURGAUCHEB, INPUT);
-  attachInterrupt(digitalPinToInterrupt(ENCODEURDROITA), compterDroit, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENCODEURGAUCHEA), compterGauche, CHANGE);
-}
-
-void initPid() {
-  pidDroit.SetMode(AUTOMATIC);
-  pidDroit.SetOutputLimits(-255, 255);
-  pidGauche.SetMode(AUTOMATIC);
-  pidGauche.SetOutputLimits(-255, 255);
-}
-
-// -----------------------------------------------------------------------------
-// Setup
-// -----------------------------------------------------------------------------
 void setup(){
-  for(int i=0;i<NB_BOUTONS;i++) pinMode(boutons[i], INPUT_PULLUP);
+  for(int i=0; i < NB_BOUTONS; i++) pinMode(boutons[i], INPUT_PULLUP);
   lcd.init(); lcd.backlight();
-
-  initMoteurs();
-  initEncodeurs();
-  initPid();
-
-  myTimer.begin(interruptionTimer, TIMERINTERVALE);
  
-  // Message de bienvenue
   lcd.clear();
   lcd.setCursor(0,0); lcd.print("Bonjour, je suis");
   lcd.setCursor(0,1); lcd.print("BILLY votre robot");
@@ -194,9 +95,7 @@ void setup(){
   rafraichirMenu();
 }
  
-// -----------------------------------------------------------------------------
-// Loop
-// -----------------------------------------------------------------------------
+
 void loop(){
   int b = bouton_presse();
   if(b>0){
@@ -212,48 +111,11 @@ void loop(){
   }
 }
 
-// -----------------------------------------------------------------------------
-// Fonction Timer
-// -----------------------------------------------------------------------------
-
-void interruptionTimer(){
-  
-    //Calcul des vitesses, position et angle du robot  
-    vitesseDroit=((compteDroit*50)/(520.0));
-    vitesseGauche=((compteGauche*50)/(520.0));
-    
-    distMoy=(distDroit+distGauche)/2;
-    distanceTotal+=distMoy;
-    if(distDroit>distGauche || distGauche>distDroit){
-      dist=distDroit-distGauche;
-      theta = dist/entraxe;
-    }
-    angleTotal+=theta;
-    if(angleTotal>pi){
-      angleTotal-=2*pi;
-    }else if(angleTotal<-pi){
-      angleTotal+=2*pi;
-    }
-    x+=distMoy*cos(angleTotal);
-    y+=distMoy*sin(angleTotal);
-    compteDroit=0;
-    compteGauche=0;
-
-    //Vérif suivi de ligne
-    suivre_ligne();
-}
-
-
-
-
 
 // -----------------------------------------------------------------------------
-// Fonctions PID
+// Lecture des boutons (1 à 4 ou 0 indetermine)
 // -----------------------------------------------------------------------------
- 
-// -----------------------------------------------------------------------------
-// Lecture des boutons (1 à 4 ou 0)
-// -----------------------------------------------------------------------------
+
 int bouton_presse(){
   int trouve=0,ret=0;
   for(int i=0;i<NB_BOUTONS;i++){
@@ -268,6 +130,7 @@ int bouton_presse(){
 // -----------------------------------------------------------------------------
 // Affichage du menu ou sous-menu en « fenêtre » de 4 lignes
 // -----------------------------------------------------------------------------
+
 void rafraichirMenu(){
   lcd.clear();
  
@@ -330,12 +193,14 @@ void rafraichirMenu(){
 // -----------------------------------------------------------------------------
 // Wrappers cycliques
 // -----------------------------------------------------------------------------
+
 static void wrapInc(uint8_t &v, uint8_t m){ v = (v+1) % m; }
 static void wrapDec(uint8_t &v, uint8_t m){ v = (v+m-1) % m; }
  
 // -----------------------------------------------------------------------------
 // Gestion des boutons
 // -----------------------------------------------------------------------------
+
 void boutonHaut(){
   if(!enSousMenu)       wrapDec(selMenu,NB_MENU);
   else                  wrapDec(selSous,tailleSousMenu[selMenu]);
@@ -392,4 +257,3 @@ void boutonRetour(){
     rafraichirMenu();
   }
 }
- 
