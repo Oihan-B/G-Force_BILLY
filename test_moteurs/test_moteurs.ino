@@ -161,10 +161,12 @@ void compterGauche() {
 
 void loop(){
   if(vitesseDroit>0){
-    Serial.println("D");
+    Serial.print("D : ");
+    Serial.println(vitesseDroit);
   }
   if(vitesseGauche>0){
-    Serial.println("G");
+    Serial.print("G : ");
+    Serial.println(vitesseGauche);
   }
   
 }
