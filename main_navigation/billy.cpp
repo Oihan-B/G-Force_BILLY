@@ -41,8 +41,48 @@ float lectureCapteurUltrason(int capteur) {
   return distance_cm;
 }
 
-void contournerObstacle(int marge){
-  int detections[4]  = {0,0,0,0}; // CG AG AD CD
+void contournerObstacle() {
+  stopMoteurs(); // Arrêter les moteurs pour éviter les collisions
+  if (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CD) !=0) {
+      // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
+      gyro(1); // Signalisation du blocage
+    }
+    tournerAngleD(90); // Tourner à droite pour éviter l'obstacle
+    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
+      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    }
+    avancer(SPEED); // Avancer pour reprendre la trajectoire
+    tournerAngleG(90); // Revenir à la trajectoire initiale
+    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
+      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    }
+    tournerAngleG(90); // Tourner à gauche pour reprendre la trajectoire
+    while (lectureCapteurLigne() != 0) {
+      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    }
+    tournerAngleD(90); // Revenir à la trajectoire initiale
+  }
+  if (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CG) !=0) {
+      // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
+      gyro(1); // Signalisation du blocage
+    }
+    tournerAngleG(90); // Tourner à droite pour éviter l'obstacle
+    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
+      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    }
+    avancer(SPEED); // Avancer pour reprendre la trajectoire
+    tournerAngleD(90); // Revenir à la trajectoire initiale
+    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
+      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    }
+    tournerAngleD(90); // Tourner à gauche pour reprendre la trajectoire
+    while (lectureCapteurLigne() != 0) {
+      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    }
+    tournerAngleG(90); // Revenir à la trajectoire initiale
+  }
 }
 
 
