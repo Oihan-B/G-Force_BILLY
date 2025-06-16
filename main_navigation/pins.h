@@ -12,11 +12,11 @@
 
 // Encodeurs
 
-#define ENCODEURDROITA 24
-#define ENCODEURDROITB 25
+#define ENCODEURDROITA 25
+#define ENCODEURDROITB 24
 
-#define ENCODEURGAUCHEA 29
-#define ENCODEURGAUCHEB 28
+#define ENCODEURGAUCHEA 28
+#define ENCODEURGAUCHEB 29
 
 // Suiveur de ligne
 

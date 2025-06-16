@@ -3,6 +3,37 @@
 #include "billy.h"
 #include "pins.h"
 
+// -----------------------------------------------------------------------------
+// Variables Odometrie
+// -----------------------------------------------------------------------------
+
+#define SPEED 100;
+
+#define ENTRAXE 320 
+#define NB_TIC 1560.0 // Nombre de tic par tour de roue
+#define D_ROUE 100 // Diametre roue
+#define TIMERINTERVALE 20000 // ms
+
+IntervalTimer myTimer;
+
+volatile double pi=math.pi;
+volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
+volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
+volatile double dist=0;
+volatile double distMoy=0;
+volatile double distDroit=0;
+volatile double distGauche=0;
+volatile double vitesseDroit = 0;  // vitesse du moteur en tics
+volatile double vitesseGauche = 0; // vitesse du moteur en tics
+volatile double pwm_Droit=60;
+volatile double pwm_Gauche=60;
+volatile double intervalle=0.2;
+volatile double distanceTotal = 0; //mm
+volatile double angleTotal = 0; // radian
+volatile double x = 0; //mm 
+volatile double y = 0; //mm
+volatile double theta = 0; // radian entre -Pi et Pi
+
 
 // -----------------------------------------------------------------------------
 // Detection Obstacles
@@ -191,34 +222,21 @@ void tournerG (uint8_t pwm){
   avancerMoteurDroit(pwm);
 }
 
-// -----------------------------------------------------------------------------
-// Variables Odometrie
-// -----------------------------------------------------------------------------
 
-#define ENTRAXE 320 // A MESURER
-#define NB_TIC 1560.0 // Nombre de tic par tour de roue
-#define D_ROUE 100 // Diametre roue
-#define TIMERINTERVALE 20000 // ms
 
-IntervalTimer myTimer;
+void tournerAngleD (uint8_t angle) {
+  while (angleTotal<angle-0.1){
+    tournerD(SPEED);
+  }
+  stopMoteurs();
+}
 
-volatile double pi=3.14;
-volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
-volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
-volatile double dist=0;
-volatile double distMoy=0;
-volatile double distDroit=0;
-volatile double distGauche=0;
-volatile double vitesseDroit = 0;  // vitesse du moteur en tics
-volatile double vitesseGauche = 0; // vitesse du moteur en tics
-volatile double pwm_Droit=60;
-volatile double pwm_Gauche=60;
-volatile double intervalle=0.2;
-volatile double distanceTotal = 0; //mm
-volatile double angleTotal = 0; // radian
-volatile double x = 0; //mm 
-volatile double y = 0; //mm
-volatile double theta = 0; // radian entre -Pi et Pi
+void tournerAngleG (uint8_t angle) {
+  while (angleTotal>angle+0.1){
+    tournerG(SPEED);
+  }
+  stopMoteurs();
+}
 
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie

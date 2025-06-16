@@ -82,7 +82,12 @@ void (*actionSousMenu[NB_MENU][9])() = {
 
 
 void setup(){
-  for(int i=0; i < NB_BOUTONS; i++) pinMode(boutons[i], INPUT_PULLUP);
+  initCapteurUltrason();
+  initSuiviLigne();
+  initEncodeurs();
+  for(int i=0; i < NB_BOUTONS; i++) { 
+    pinMode(boutons[i], INPUT_PULLUP);
+  }
   lcd.init(); lcd.backlight();
  
   lcd.clear();

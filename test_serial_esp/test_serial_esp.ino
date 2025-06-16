@@ -13,6 +13,16 @@ float lastPosition = 0.0;
 #define TXD 17   
 String rxBuf;
 
+// Serial OUT
+int long lastSendTime;
+int sendInterval = 50;
+const int arraySize = 50;
+String serialBufferArray[arraySize] = {""};
+String lastMessage = "";
+bool hasSent = false;
+bool hasAddedToQueue = false;
+bool mustSendSerial = false;
+
 const char HTML_PAGE[] PROGMEM = R"rawliteral(
 <!DOCTYPE html><html>
 <head><meta charset="UTF-8"><title>Telemetrie</title></head>
@@ -35,6 +45,50 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
 </body>
 </html>
 )rawliteral";
+
+
+
+
+
+// SERIAL
+void addToSerialQueue(String toSend, int messageType){
+  hasAddedToQueue = false;
+  for(int i=0; i<arraySize ; ++i){
+    if(serialBufferArray[i] == "" && !hasAddedToQueue){
+      if(messageType==1){toSend="$" + toSend;}
+      serialBufferArray[i] = toSend;
+      hasAddedToQueue = true;
+      mustSendSerial = true;
+    }
+  }
+}
+
+void sendSerialIfNecessary(){
+  if(millis() > (lastSendTime + sendInterval) && mustSendSerial){
+    hasSent = false;
+    for(int i=0; i<arraySize ; ++i){
+      if(serialBufferArray[i] != "" && !hasSent){
+        if(serialBufferArray[i][0] == '$'){
+          sendPackage(serialBufferArray[i].substring(1));
+        }
+        else{
+          Serial.println(serialBufferArray[i]);
+          lastMessage = serialBufferArray[i];
+          }
+
+        serialBufferArray[i] = "";
+        lastSendTime = millis();
+        hasSent = true;
+      }
+    } 
+
+    // check if still something to send
+    mustSendSerial = false;
+    for(int i=0; i<arraySize ; ++i){
+      if(serialBufferArray[i] != ""){mustSendSerial = true;}
+    } 
+  }
+}
 
 void setup() {
 
