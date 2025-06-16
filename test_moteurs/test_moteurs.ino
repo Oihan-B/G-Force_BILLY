@@ -123,6 +123,21 @@ void tournerG (int16_t pwm){
 }
 
 
+void tournerAngleD (uint8_t angle) {
+  while (angleTotal<angle-0.1){
+    tournerD(SPEED);
+  }
+  stopMoteurs();
+}
+
+void tournerAngleG (uint8_t angle) {
+  while (angleTotal>angle+0.1){
+    tournerG(SPEED);
+  }
+  stopMoteurs();
+}
+
+
 void interruptionTimer(){
   
     //Calcul des vitesses, position et angle du robot  
@@ -170,7 +185,7 @@ void compterGauche() {
 
 void loop(){
 
-  reculer(100);
+  tournerAngleD(90);
 
   if(vitesseDroit>0){
     Serial.print("D : ");

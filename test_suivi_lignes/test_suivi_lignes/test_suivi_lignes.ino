@@ -12,7 +12,6 @@
 #define S3 4
 #define S4 5
 #define S5 6
-#define CLP 9
 
 #define TRIGGER 33
 #define CAPTEUR_CG 15
@@ -156,6 +155,21 @@ void loop (){
     */
     // TEST SUIVI DE LIGNES
 
+
+  for (i = 0; i < 5; i++){
+      detections[i] = digitalRead(capteurs[i]); // 0 SOL // 1 LIGNE
+    }
+
+    for(i = 0; i<5; i++){
+      Serial.print(i);
+      Serial.print(" : ");
+      Serial.println(detections[i]);
+    }
+    Serial.println("\n");
+
+    delay(1000);
+    
+  /*
     int c_avancer = 0, c_tournerD = 0, c_tournerG = 0;
 
     delay(500);
@@ -209,5 +223,7 @@ void loop (){
       Serial.println("\nLigne perdue : STOP ou reculer\n");
       stopMoteurs();
     }
+  }
+  */
   }
 }
