@@ -85,6 +85,10 @@ void setup(){
   initCapteurUltrason();
   initSuiviLigne();
   initEncodeurs();
+
+  pinMode(GYROPHARE, OUTPUT);
+  digitalWrite(GYROPHARE, LOW);
+  
   for(int i=0; i < NB_BOUTONS; i++) { 
     pinMode(boutons[i], INPUT_PULLUP);
   }

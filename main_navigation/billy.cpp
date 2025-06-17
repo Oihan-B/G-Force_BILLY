@@ -51,25 +51,38 @@ void initCapteurUltrason(){
   pinMode(TRIGGER, OUTPUT);
 }
 
-float lectureCapteurUltrason(int capteur) {
+float lectureCapteurUltrason(int capteur, int size) {
   unsigned long duree;
-  float distance_cm;
+  float distances_cm[size]];
+  int i;
+  int min;
 
-  digitalWrite(TRIGGER, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIGGER, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER, LOW);
+  for (i = 0; i < size; i++){
+      digitalWrite(TRIGGER, LOW);
+      delayMicroseconds(2);
+      digitalWrite(TRIGGER, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIGGER, LOW);
 
-  duree = pulseIn(capteur, HIGH, 30000UL);
+      duree = pulseIn(capteur, HIGH, 30000UL);
 
-  distance_cm = duree * 0.034f / 2.0f;
-
-  if (distance_cm < 0 || distance_cm > 50){
-    distance_cm = 0;
+      distance_cm[i] = duree * 0.034f / 2.0f;
   }
 
-  return distance_cm;
+  for (i = 0; i < size; i++){ // On garde la detection minimale parmis x detections pour éviter les perturbations
+    if (i = 0){
+      min = distances_cm[i];
+    }
+    else if (distances_cm[i] < min){
+      min = distances_cm[i];
+    }
+  }
+
+  if (min < 5 || min > 30){ // Si c'est inférieure à 5 cm potentiellement une perturbation donc osef, > 30 aussi osef
+    min = 0;
+  }
+
+  return min;
 }
 
 void contournerObstacle() {
@@ -174,6 +187,12 @@ char suiviLigne(){
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 
+void initMoteurs(){
+  pinMode(PWMMOTEURGAUCHE,      OUTPUT);
+  pinMode(DIRECTIONMOTEURGAUCHE,OUTPUT);
+  pinMode(PWMMOTEURDROIT,       OUTPUT);
+  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
+}
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM

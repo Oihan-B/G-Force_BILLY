@@ -3,8 +3,8 @@
 #define PWMMOTEURGAUCHE      22
 #define DIRECTIONMOTEURGAUCHE 20
 
-#define SPEED       80
-#define TURN_SPEED  60
+#define SPEED       150
+#define TURN_SPEED  100
 
 #define TRIGGER     33
 #define CAPTEUR_CG  15
@@ -12,63 +12,120 @@
 #define CAPTEUR_AG  31
 #define CAPTEUR_AD  30
 
-#define OBSTACLE_MAX_CM  50.0f  // portée max avant « pas d’obstacle »
+void initCapteurUltrason(){
+  int i;
+  int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
 
-const uint8_t LED_PIN = LED_BUILTIN;
+  for (i = 0; i < 4; i++) {
+    pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
+  }
 
-// protos
-float lectureCapteurUltrason(int echoPin);
-void avancer(int16_t);
-void reculer(int16_t);
-void tournerG(int16_t);
-void tournerD(int16_t);
-void stopMoteurs();
+  pinMode(TRIGGER, OUTPUT);
+}
+
+float lectureCapteurUltrason(int capteur, int size) {
+  unsigned long duree;
+  float distances_cm[size]];
+  int i;
+  int min;
+
+  for (i = 0; i < size; i++){
+      digitalWrite(TRIGGER, LOW);
+      delayMicroseconds(2);
+      digitalWrite(TRIGGER, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIGGER, LOW);
+
+      duree = pulseIn(capteur, HIGH, 30000UL);
+
+      distance_cm[i] = duree * 0.034f / 2.0f;
+  }
+
+  for (i = 0; i < size; i++){ // On garde la detection minimale parmis x detections pour éviter les perturbations
+    if (i = 0){
+      min = distances_cm[i];
+    }
+    else if (distances_cm[i] < min){
+      min = distances_cm[i];
+    }
+  }
+
+  if (min < 5 || min > 30){ // Si c'est inférieure à 5 cm potentiellement une perturbation donc osef, > 30 aussi osef
+    min = 0;
+  }
+
+  return min;
+}
+
+void initMoteurs(){
+  pinMode(PWMMOTEURGAUCHE, OUTPUT);
+  pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
+  pinMode(PWMMOTEURDROIT, OUTPUT);
+  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
+}
+
+void avancerMoteurDroit(uint8_t pwm) {
+  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
+}
+
+void avancerMoteurGauche(uint8_t pwm) {
+  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+}
+
+void reculerMoteurDroit (uint8_t pwm) {
+  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+}
+
+void reculerMoteurGauche (uint8_t pwm) {
+  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+}
+
+void stopMoteurs() {
+  analogWrite (PWMMOTEURDROIT, 0);
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+  analogWrite (PWMMOTEURGAUCHE, 0);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+}
+
+void avancer (uint8_t pwm){
+  avancerMoteurGauche(pwm);
+  avancerMoteurDroit(pwm);
+}
+
+void reculer (uint8_t pwm){
+  reculerMoteurGauche(pwm);
+  reculerMoteurDroit(pwm);
+}
+
+void tournerD (uint8_t pwm){
+  avancerMoteurGauche(pwm);
+  reculerMoteurDroit(pwm);
+}
+
+void tournerG (uint8_t pwm){
+  reculerMoteurGauche(pwm);
+  avancerMoteurDroit(pwm);
+}
 
 void setup() {
   Serial.begin(115200);
   Serial4.begin(115200);
 
-  pinMode(PWMMOTEURGAUCHE,      OUTPUT);
-  pinMode(DIRECTIONMOTEURGAUCHE,OUTPUT);
-  pinMode(PWMMOTEURDROIT,       OUTPUT);
-  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
-
-  pinMode(TRIGGER, OUTPUT);
-  pinMode(CAPTEUR_CG, INPUT);
-  pinMode(CAPTEUR_AG, INPUT);
-  pinMode(CAPTEUR_AD, INPUT);
-  pinMode(CAPTEUR_CD, INPUT);
-
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-
-  Serial.println("Teensy prête, j'attends les commandes...");
+  initMoteurs();
+  initCapteurUltrason();
 }
 
 void loop() {
-  // 1) priorité obstacle
-  float dAG = lectureCapteurUltrason(CAPTEUR_AG);
-  float dAD = lectureCapteurUltrason(CAPTEUR_AD);
-
-  if ((dAG > 0 && dAG <= OBSTACLE_MAX_CM) ||
-      (dAD > 0 && dAD <= OBSTACLE_MAX_CM)) {
-    // obstacle détecté : stop et LED allumée
+  if (lectureCapteurUltrason(AG, 3) != 0 || lectureCapteurUltrason(AD, 3) != 0){
     stopMoteurs();
-    digitalWrite(LED_PIN, HIGH);
-    // on repasse à l’itération suivante
-    return;
   }
-  // pas d’obstacle : LED éteinte
-  digitalWrite(LED_PIN, LOW);
 
-  // 2) traitement des commandes reçues
   if (Serial4.available()) {
     char c = Serial4.read();
-
-    // blink LED court pour debug
-    digitalWrite(LED_PIN, HIGH);
-    delay(50);
-    digitalWrite(LED_PIN, LOW);
 
     Serial.printf("Reçu '%c'\n", c);
     switch (c) {
@@ -80,47 +137,4 @@ void loop() {
       default:                        break;
     }
   }
-}
-
-//--- Fonctions moteurs ----------------
-void avancer(int16_t p){
-  analogWrite(PWMMOTEURGAUCHE, p); digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
-  analogWrite(PWMMOTEURDROIT,   p); digitalWrite(DIRECTIONMOTEURDROIT,   LOW);
-}
-void reculer(int16_t p){
-  analogWrite(PWMMOTEURGAUCHE, p); digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
-  analogWrite(PWMMOTEURDROIT,   p); digitalWrite(DIRECTIONMOTEURDROIT,   HIGH);
-}
-void tournerG(int16_t p){
-  analogWrite(PWMMOTEURGAUCHE, p); digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
-  analogWrite(PWMMOTEURDROIT,   p); digitalWrite(DIRECTIONMOTEURDROIT,   LOW);
-}
-void tournerD(int16_t p){
-  analogWrite(PWMMOTEURGAUCHE, p); digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
-  analogWrite(PWMMOTEURDROIT,   p); digitalWrite(DIRECTIONMOTEURDROIT,   HIGH);
-}
-void stopMoteurs(){
-  analogWrite(PWMMOTEURGAUCHE, 0); digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
-  analogWrite(PWMMOTEURDROIT,   0); digitalWrite(DIRECTIONMOTEURDROIT,   LOW);
-}
-
-//--- Ultrason --------------------------
-float lectureCapteurUltrason(int echoPin) {
-  unsigned long duree;
-  float distance_cm;
-
-  digitalWrite(TRIGGER, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIGGER, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER, LOW);
-
-  duree = pulseIn(echoPin, HIGH, 30000UL);
-  distance_cm = duree * 0.034f / 2.0f;
-
-  // si hors portée >50 cm ou timeout, on considère « pas d’obstacle »
-  if (distance_cm <= 0 || distance_cm > OBSTACLE_MAX_CM) {
-    distance_cm = 0.0f;
-  }
-  return distance_cm;
 }

@@ -1,15 +1,15 @@
 #define PWMMOTEURDROIT 23
 #define DIRECTIONMOTEURDROIT 21
 
-#define ENCODEURDROITA 24
-#define ENCODEURDROITB 25
+#define ENCODEURDROITA 25
+#define ENCODEURDROITB 24
 
 
 #define PWMMOTEURGAUCHE 22
 #define DIRECTIONMOTEURGAUCHE 20
 
-#define ENCODEURGAUCHEA 29
-#define ENCODEURGAUCHEB 28
+#define ENCODEURGAUCHEA 28
+#define ENCODEURGAUCHEB 29
 
 #define SPEED 100
 #define TURN_SPEED 100
@@ -18,7 +18,7 @@
 
 
 #define ENTRAXE 320 // A MESURER
-#define NB_TIC 1560.0 // Nombre de tic par tour de roue
+#define NB_TIC 840.0 // Nombre de tic par tour de roue
 #define D_ROUE 100 // Diametre roue
 
 
@@ -125,14 +125,14 @@ void tournerG (int16_t pwm){
 
 void tournerAngleD (uint8_t angle) {
   while (angleTotal<angle-0.1){
-    tournerD(SPEED);
+    tournerD(TURN_SPEED);
   }
   stopMoteurs();
 }
 
 void tournerAngleG (uint8_t angle) {
   while (angleTotal>angle+0.1){
-    tournerG(SPEED);
+    tournerG(TURN_SPEED);
   }
   stopMoteurs();
 }
@@ -150,7 +150,7 @@ void interruptionTimer(){
       dist=distDroit-distGauche;
       theta = dist/ENTRAXE;
     }
-    angleTotal+=theta;
+    angleTotal+=2*theta;
     if(angleTotal>pi){
       angleTotal-=2*pi;
     }else if(angleTotal<-pi){
@@ -185,7 +185,7 @@ void compterGauche() {
 
 void loop(){
 
-  tournerAngleD(90);
+  tournerAngleD(pi/2);
 
   if(vitesseDroit>0){
     Serial.print("D : ");
