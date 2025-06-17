@@ -1,4 +1,4 @@
-#include <PID_v1.h>
+//#include <PID_v1.h>
 
 #define PWMMOTEURDROIT 23
 #define DIRECTIONMOTEURDROIT 21
@@ -49,6 +49,8 @@ volatile double x = 0; //mm
 volatile double y = 0; //mm
 volatile double theta = 0; // radian entre -Pi et Pi
 
+float marge = 0.05;
+
 
 
 
@@ -69,14 +71,7 @@ void initMoteurs () {
 }
 
 
-void setup() {
-  Serial.begin(9600);
-  initEncodeurs();
-  initMoteurs();
-  initPid();
 
-  myTimer.begin(interruptionTimer, TIMERINTERVALE);
-}
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
@@ -193,12 +188,25 @@ void initPid() {
 }
 
 void runPidMoteurs ( float commandeMoteurGauche, float commandeMoteurDroit) {
-  
+    /*
     consigneDroit = commandeMoteurDroit;
     consigneGauche = commandeMoteurGauche;
     pidDroit.Compute();
     pidGauche.Compute();
     setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+    */
+
+    if(vitesseGauche<commandeMoteurGauche-marge){
+      pwm_Gauche++;
+    }else if(citesseGauche>commandeMoteurGauche+marge){
+      pwm_Gauche--;
+    }
+
+    if(vitesseDroit<commandeMoteurDroit-marge){
+      pwm_Droit++;
+    }else if(citesseDroit>commandeMoteurDroit+marge){
+      pwm_Droit--;
+    }
 
 }
 
@@ -247,6 +255,15 @@ void compterGauche() {
   distGauche=((pi*D_ROUE)/NB_TIC)*compteGauche;
 }
 
+
+void setup() {
+  Serial.begin(9600);
+  initEncodeurs();
+  initMoteurs();
+  //initPid();
+
+  myTimer.begin(interruptionTimer, TIMERINTERVALE);
+}
 
 void loop(){
 
