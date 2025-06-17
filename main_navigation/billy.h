@@ -41,16 +41,25 @@ void avancer (uint8_t pwm);
 void reculer (uint8_t pwm);
 void tournerD (uint8_t pwm);
 void tournerG (uint8_t pwm);
+void arreter();
+void tournerAngleD (uint8_t angle);
+void tournerAngleG (uint8_t angle);
 
 
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie
 // -----------------------------------------------------------------------------
 
-void initEncodeurs()
-void interruptionTimer()
+void initEncodeurs();
+void interruptionTimer();
 void compterDroit();
 void compterGauche();
+
+// -----------------------------------------------------------------------------
+// PID
+// -----------------------------------------------------------------------------
+
+void runPidMoteurs(float cmdG, float cmdD);
 
 // -----------------------------------------------------------------------------
 // Monitoring ESP32

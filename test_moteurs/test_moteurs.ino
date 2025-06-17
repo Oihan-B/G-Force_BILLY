@@ -28,7 +28,6 @@ volatile double distanceTotal = 0; // mm
 volatile double angleTotal = 0;    // rad
 volatile double x = 0, y = 0;
 
-volatile bool newSpeed = false;    // ← MODIF 1 : flag pour la boucle 20 ms
 
 // PWM signés
 volatile double pwm_Droit = 60, pwm_Gauche = 60;
@@ -107,7 +106,7 @@ void interruptionTimer() {
   y += distMoy * sin(angleTotal);
 
   compteDroit = compteGauche = 0;
-  newSpeed = true;  // ← MODIF 3 : on autorise la boucle de régul
+  runPidMoteurs(consigneGauche, consigneDroit);
 }
 
 void compterDroit() {
@@ -140,6 +139,10 @@ void tournerG(float v) {
   consigneDroit  =  v;
 }
 
+void arreter(){
+  consigneGauche = consigneDroit = 0;
+}
+
 void runPidMoteurs(float cmdG, float cmdD) {
   // inchangé
   if (vitesseGauche < cmdG - marge)  pwm_Gauche++;
@@ -167,10 +170,7 @@ void loop(){
     // on positionne la consigne
     avancer(SPEED);
     // --- MODIF 4 : on ne régule qu’après la mesure 20 ms ---
-    if (newSpeed) {
-      newSpeed = false;
-      runPidMoteurs(consigneGauche, consigneDroit);
-    }
+    
   } else {
     stopMoteurs();
     while(1);  // blocage une fois l’objectif atteint

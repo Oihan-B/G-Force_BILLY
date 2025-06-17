@@ -8,7 +8,7 @@
 // Variables Odometrie
 // -----------------------------------------------------------------------------
 
-#define SPEED 0.5;
+#define SPEED 0.3;
 
 #define ENTRAXE 320 
 #define NB_TIC 1560.0 // Nombre de tic par tour de roue
@@ -34,6 +34,9 @@ volatile double angleTotal = 0; // radian
 volatile double x = 0; //mm 
 volatile double y = 0; //mm
 volatile double theta = 0; // radian entre -Pi et Pi
+
+double consigneDroit = 0;
+double consigneGauche = 0;
 
 
 // -----------------------------------------------------------------------------
@@ -74,7 +77,7 @@ float lectureCapteurUltrason(int capteur) {
 }
 
 void contournerObstacle() {
-  stopMoteurs(); // Arrêter les moteurs pour éviter les collisions
+  arreter(); // Arrêter les moteurs pour éviter les collisions
   if (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
     if (lectureCapteurUltrason(CAPTEUR_CD) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
@@ -175,12 +178,6 @@ char suiviLigne(){
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 
-void initMoteurs () {
-  pinMode(PWMMOTEURDROIT, OUTPUT);
-  pinMode(PWMMOTEURGAUCHE, OUTPUT);
-  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
-  pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
-}
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
@@ -209,52 +206,49 @@ void stopMoteurs() {
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
-void avancer (uint8_t vitesse){
-  runPidMoteurs(vitesse,vitesse);
-  /*
-  avancerMoteurGauche(pwm);
-  avancerMoteurDroit(pwm);
-  */
+
+void setPwmEtDirectionMoteurs(int16_t pwmGauche, int16_t pwmDroit) {
+  if (pwmDroit > 0)        avancerMoteurDroit(pwmDroit);
+  else if (pwmDroit < 0)   reculerMoteurDroit(-pwmDroit);
+
+  if (pwmGauche > 0)        avancerMoteurGauche(pwmGauche);
+  else if (pwmGauche < 0)   reculerMoteurGauche(-pwmGauche);
+
+  if (pwmDroit == 0 && pwmGauche == 0) stopMoteurs();
 }
 
-void reculer (uint8_t vitesse){
-  runPidMoteurs(-vitesse,-vitesse);
-  /*
-  reculerMoteurGauche(pwm);
-  reculerMoteurDroit(pwm);
-  */
+void avancer(float v) {
+  consigneDroit = consigneGauche = v;
+}
+void reculer(float v) {
+  consigneDroit = consigneGauche = -v;
+}
+void tournerD(float v) {
+  consigneGauche =  v;
+  consigneDroit  = -v;
+}
+void tournerG(float v) {
+  consigneGauche = -v;
+  consigneDroit  =  v;
 }
 
-void tournerD (uint8_t vitesse){
-  runPidMoteurs(vitesse,-0.5*vitesse);
-  /*
-  avancerMoteurGauche(pwm);
-  reculerMoteurDroit(pwm);
-  */
+void arreter(){
+  consigneGauche = consigneDroit = 0;
 }
-
-void tournerG (uint8_t vitesse){
-  runPidMoteurs(-0.5*vitesse,vitesse);
-  /*
-  reculerMoteurGauche(pwm);
-  avancerMoteurDroit(pwm);
-  */
-}
-
 
 
 void tournerAngleD (uint8_t angle) {
   while (angleTotal<angle-0.1){
     tournerD(SPEED);
   }
-  stopMoteurs();
+  arreter();
 }
 
 void tournerAngleG (uint8_t angle) {
   while (angleTotal>angle+0.1){
     tournerG(SPEED);
   }
-  stopMoteurs();
+  arreter();
 }
 
 // -----------------------------------------------------------------------------
@@ -294,6 +288,8 @@ void interruptionTimer(){
     y+=distMoy*sin(angleTotal);
     compteDroit=0;
     compteGauche=0;
+
+    runPidMoteurs(consigneGauche, consigneDroit);
 }
 
 
@@ -321,31 +317,20 @@ void compterGauche() {
 // PID
 // -----------------------------------------------------------------------------
 
-double consigneDroit = 0;
-double consigneGauche = 0;
- 
-double Kp = 70;
-double Ki = 5;
-double Kd = 2;
- 
-PID pidDroit(&vitesseDroit, &pwm_Droit, &consigneDroit, Kp, Ki, Kd, DIRECT);
-PID pidGauche(&vitesseGauche, &pwm_Gauche, &consigneGauche, Kp, Ki, Kd, DIRECT);
 
-void initPid() {
-  pidDroit.SetMode(AUTOMATIC);
-  pidDroit.SetOutputLimits(-255, 255);
-  pidGauche.SetMode(AUTOMATIC);
-  pidGauche.SetOutputLimits(-255, 255);
-}
+void runPidMoteurs(float cmdG, float cmdD) {
+  // inchangé
+  if (vitesseGauche < cmdG - marge)  pwm_Gauche++;
+  else if (vitesseGauche > cmdG + marge) pwm_Gauche--;
 
-void runPidMoteurs ( int16_t commandeMoteurGauche, int16_t commandeMoteurDroit) {
-  
-    consigneDroit = commandeMoteurDroit;
-    consigneGauche = commandeMoteurGauche;
-    pidDroit.Compute();
-    pidGauche.Compute();
-    setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+  if (vitesseDroit < cmdD - marge)   pwm_Droit++;
+  else if (vitesseDroit > cmdD + marge)   pwm_Droit--;
 
+  // bornage
+  pwm_Gauche = constrain(pwm_Gauche, -255, 255);
+  pwm_Droit  = constrain(pwm_Droit,  -255, 255);
+
+  setPwmEtDirectionMoteurs((int)pwm_Gauche, (int)pwm_Droit);
 }
 
 

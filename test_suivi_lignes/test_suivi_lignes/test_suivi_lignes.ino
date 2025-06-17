@@ -24,7 +24,6 @@ volatile double distanceTotal = 0; // mm
 volatile double angleTotal = 0;    // rad
 volatile double x = 0, y = 0;
 
-volatile bool newSpeed = false;    // ← MODIF 1 : flag pour la boucle 20 ms
 
 // PWM signés
 volatile double pwm_Droit = 60, pwm_Gauche = 60;
@@ -138,6 +137,10 @@ void tournerG(float v) {
   consigneDroit  =  v;
 }
 
+void arreter(){
+  consigneGauche = consigneDroit = 0;
+}
+
 
 void setPwmEtDirectionMoteurs(int16_t pwmGauche, int16_t pwmDroit) {
   if (pwmDroit > 0)        avancerMoteurDroit(pwmDroit);
@@ -170,7 +173,7 @@ void interruptionTimer() {
   y += distMoy * sin(angleTotal);
 
   compteDroit = compteGauche = 0;
-  newSpeed = true;  // ← MODIF 3 : on autorise la boucle de régul
+  runPidMoteurs(consigneGauche, consigneDroit);
 }
 
 void compterDroit() {
@@ -229,24 +232,19 @@ void loop (){
       Serial.println(detections[i]);
     }
 
-    if (newSpeed) {
-      newSpeed = false;
-      runPidMoteurs(consigneGauche, consigneDroit);
-    }
-
     if (!detections[1] && !detections[2] && !detections[3]) {
       Serial.println("\nCheckpoint detecte\n");
-      stopMoteurs();
+      arreter();
     }
 
     else if (!detections[3] || !detections[4]) {
       Serial.println("\nTourner à droite pour retrouver la ligne\n");
-      tournerD(TURN_SPEED, 25);
+      tournerD(TURN_SPEED);
     } 
 
     else if (!detections[0] || !detections[1]) {
       Serial.println("\nTourner à gauche pour retrouver la ligne\n");
-      tournerG(TURN_SPEED, 25);
+      tournerG(TURN_SPEED);
     } 
 
     else if (!detections[2]) {
@@ -256,7 +254,7 @@ void loop (){
 
     else {
       Serial.println("\nLigne perdue : STOP ou reculer\n");
-      stopMoteurs();
+      arreter();
     }
   }
 }
