@@ -267,9 +267,14 @@ void setup() {
 
 void loop(){
 
-  tournerD(SPEED);
+  //tournerD(SPEED);
 
-  Serial.print("Consigne : ");
+  if(distanceTotal<1000){
+    avancer(SPEED);
+  }else{
+    stopMoteurs();
+  }
+  /*Serial.print("Consigne : ");
   Serial.println(consigneDroit);
   Serial.println(pwm_Droit);
   /*if(vitesseDroit>0){
