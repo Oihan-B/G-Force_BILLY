@@ -45,7 +45,7 @@ void initCapteurUltrason(){
   int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
 
   for (i = 0; i < 4; i++) {
-    pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
+    pinMode(capteurs_ultrasons[i], INPUT);
   }
 
   pinMode(TRIGGER, OUTPUT);
@@ -53,9 +53,9 @@ void initCapteurUltrason(){
 
 float lectureCapteurUltrason(int capteur, int size) {
   unsigned long duree;
-  float distances_cm[size]];
+  float distances_cm[size];
   int i;
-  int min;
+  float min;
 
   for (i = 0; i < size; i++){
       digitalWrite(TRIGGER, LOW);
@@ -66,11 +66,12 @@ float lectureCapteurUltrason(int capteur, int size) {
 
       duree = pulseIn(capteur, HIGH, 30000UL);
 
-      distance_cm[i] = duree * 0.034f / 2.0f;
+      distances_cm[i] = duree * 0.034f / 2.0f;
+      delay(50);
   }
 
   for (i = 0; i < size; i++){ // On garde la detection minimale parmis x detections pour éviter les perturbations
-    if (i = 0){
+    if (i == 0){
       min = distances_cm[i];
     }
     else if (distances_cm[i] < min){
@@ -81,24 +82,23 @@ float lectureCapteurUltrason(int capteur, int size) {
   if (min < 5 || min > 30){ // Si c'est inférieure à 5 cm potentiellement une perturbation donc osef, > 30 aussi osef
     min = 0;
   }
-
   return min;
 }
 
 void contournerObstacle() {
   stopMoteurs(); // Arrêter les moteurs pour éviter les collisions
-  if (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CD) !=0) {
+  if (lectureCapteurUltrason(CAPTEUR_CG, 2) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CD, 2) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
     tournerAngleD(90); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CG, 2) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     avancer(SPEED); // Avancer pour reprendre la trajectoire
     tournerAngleG(90); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CG, 2) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     tournerAngleG(90); // Tourner à gauche pour reprendre la trajectoire
@@ -107,18 +107,18 @@ void contournerObstacle() {
     }
     tournerAngleD(90); // Revenir à la trajectoire initiale
   }
-  if (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CG) !=0) {
+  if (lectureCapteurUltrason(CAPTEUR_CD, 2) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CG, 2) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
     tournerAngleG(90); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CD, 2) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     avancer(SPEED); // Avancer pour reprendre la trajectoire
     tournerAngleD(90); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CD, 2) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     tournerAngleD(90); // Tourner à gauche pour reprendre la trajectoire
@@ -196,22 +196,22 @@ void initMoteurs(){
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
 }
 
 void avancerMoteurGauche(uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
 void reculerMoteurDroit (uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
 void reculerMoteurGauche (uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
 }
 
 void stopMoteurs() {
@@ -236,11 +236,20 @@ void tournerD (uint8_t pwm){
   reculerMoteurDroit(pwm);
 }
 
+void tournerDsoft (uint8_t pwm, uint8_t pp){
+  avancerMoteurGauche(pwm);
+  avancerMoteurDroit((pp / 100) * pwm);
+}
+
 void tournerG (uint8_t pwm){
   reculerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
 }
 
+void tournerGsoft (uint8_t pwm, uint8_t pp){
+  avancerMoteurDroit(pwm);
+  avancerMoteurGauche((pp / 100) * pwm);
+}
 
 
 void tournerAngleD (uint8_t angle) {

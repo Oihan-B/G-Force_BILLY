@@ -10,7 +10,7 @@
 // -----------------------------------------------------------------------------
 
 void initCapteurUltrason();
-float lectureCapteurUltrason(uint8_t capteur);
+float lectureCapteurUltrason(uint8_t capteur, uint8_t size);
 void contournerObstacle(uint8_t marge);
 
 
