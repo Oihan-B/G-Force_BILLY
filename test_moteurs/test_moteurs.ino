@@ -76,14 +76,14 @@ void stopMoteurs() {
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
-void setPwmEtDirectionMoteurs(int16_t pd, int16_t pg) {
-  if (pd > 0)        avancerMoteurDroit(pd);
-  else if (pd < 0)   reculerMoteurDroit(-pd);
+void setPwmEtDirectionMoteurs(int16_t pwmGauche, int16_t pwmDroit) {
+  if (pwmDroit > 0)        avancerMoteurDroit(pwmDroit);
+  else if (pwmDroit < 0)   reculerMoteurDroit(-pwmDroit);
 
-  if (pg > 0)        avancerMoteurGauche(pg);
-  else if (pg < 0)   reculerMoteurGauche(-pg);
+  if (pwmGauche > 0)        avancerMoteurGauche(pwmGauche);
+  else if (pwmGauche < 0)   reculerMoteurGauche(-pwmGauche);
 
-  if (pd == 0 && pg == 0) stopMoteurs();
+  if (pwmDroit == 0 && pwmGauche == 0) stopMoteurs();
 }
 
 // --- on ne change plus runPidMoteurs() ici ---
@@ -152,7 +152,7 @@ void runPidMoteurs(float cmdG, float cmdD) {
   pwm_Gauche = constrain(pwm_Gauche, -255, 255);
   pwm_Droit  = constrain(pwm_Droit,  -255, 255);
 
-  setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+  setPwmEtDirectionMoteurs((int)pwm_Gauche, (int)pwm_Droit);
 }
 
 void setup() {

@@ -180,12 +180,13 @@ void loop() {
 
     Serial.printf("Reçu '%c'\n", c);
     switch (c) {
-      case 'A': avancer(SPEED);       break;
-      case 'R': reculer(SPEED);       break;
-      case 'G': tournerG(TURN_SPEED); break;
-      case 'D': tournerD(TURN_SPEED); break;
-      case 'S': stopMoteurs();        break;
-      default:                        break;
+      case 'A': avancer(SPEED);        break;
+      case 'R': reculer(SPEED);        break;
+      case 'G': tournerG(TURN_SPEED);  break;
+      case 'D': tournerD(TURN_SPEED);  break;
+      case 'S': stopMoteurs();         break;
+      case 'M': avancerDistance(1000); break;
+      default:                         break;
     }
   }
 }
