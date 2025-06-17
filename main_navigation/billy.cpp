@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <PID_v1.h>
 #include "billy.h"
 #include "pins.h"
 
@@ -7,7 +8,7 @@
 // Variables Odometrie
 // -----------------------------------------------------------------------------
 
-#define SPEED 100;
+#define SPEED 1;
 
 #define ENTRAXE 320 
 #define NB_TIC 1560.0 // Nombre de tic par tour de roue
@@ -45,60 +46,47 @@ void initCapteurUltrason(){
   int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
 
   for (i = 0; i < 4; i++) {
-    pinMode(capteurs_ultrasons[i], INPUT);
+    pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
   }
 
   pinMode(TRIGGER, OUTPUT);
 }
 
-float lectureCapteurUltrason(int capteur, int size) {
+float lectureCapteurUltrason(int capteur) {
   unsigned long duree;
-  float distances_cm[size];
-  int i;
-  float min;
+  float distance_cm;
 
-  for (i = 0; i < size; i++){
-      digitalWrite(TRIGGER, LOW);
-      delayMicroseconds(2);
-      digitalWrite(TRIGGER, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(TRIGGER, LOW);
+  digitalWrite(TRIGGER, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER, LOW);
 
-      duree = pulseIn(capteur, HIGH, 30000UL);
+  duree = pulseIn(capteur, HIGH, 30000UL);
 
-      distances_cm[i] = duree * 0.034f / 2.0f;
-      delay(50);
+  distance_cm = duree * 0.034f / 2.0f;
+
+  if (distance_cm < 0 || distance_cm > 50){
+    distance_cm = 0;
   }
 
-  for (i = 0; i < size; i++){ // On garde la detection minimale parmis x detections pour éviter les perturbations
-    if (i == 0){
-      min = distances_cm[i];
-    }
-    else if (distances_cm[i] < min){
-      min = distances_cm[i];
-    }
-  }
-
-  if (min < 5 || min > 30){ // Si c'est inférieure à 5 cm potentiellement une perturbation donc osef, > 30 aussi osef
-    min = 0;
-  }
-  return min;
+  return distance_cm;
 }
 
 void contournerObstacle() {
   stopMoteurs(); // Arrêter les moteurs pour éviter les collisions
-  if (lectureCapteurUltrason(CAPTEUR_CG, 2) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CD, 2) !=0) {
+  if (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CD) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
     tournerAngleD(90); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CG, 2) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     avancer(SPEED); // Avancer pour reprendre la trajectoire
     tournerAngleG(90); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CG, 2) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     tournerAngleG(90); // Tourner à gauche pour reprendre la trajectoire
@@ -107,18 +95,18 @@ void contournerObstacle() {
     }
     tournerAngleD(90); // Revenir à la trajectoire initiale
   }
-  if (lectureCapteurUltrason(CAPTEUR_CD, 2) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CG, 2) !=0) {
+  if (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CG) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
     tournerAngleG(90); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CD, 2) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     avancer(SPEED); // Avancer pour reprendre la trajectoire
     tournerAngleD(90); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CD, 2) != 0) {
+    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
       avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
     }
     tournerAngleD(90); // Tourner à gauche pour reprendre la trajectoire
@@ -187,31 +175,25 @@ char suiviLigne(){
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 
-void initMoteurs(){
-  pinMode(PWMMOTEURGAUCHE,      OUTPUT);
-  pinMode(DIRECTIONMOTEURGAUCHE,OUTPUT);
-  pinMode(PWMMOTEURDROIT,       OUTPUT);
-  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
-}
 
 void avancerMoteurDroit(uint8_t pwm) {
-  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
-}
-
-void avancerMoteurGauche(uint8_t pwm) {
-  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
-}
-
-void reculerMoteurDroit (uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
-void reculerMoteurGauche (uint8_t pwm) {
+void avancerMoteurGauche(uint8_t pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+}
+
+void reculerMoteurDroit (uint8_t pwm) {
+  analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+}
+
+void reculerMoteurGauche (uint8_t pwm) {
+  analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
 void stopMoteurs() {
@@ -221,35 +203,38 @@ void stopMoteurs() {
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
-void avancer (uint8_t pwm){
+void avancer (uint8_t vitesse){
+  runPidMoteurs(vitesse,vitesse);
+  /*
   avancerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
+  */
 }
 
-void reculer (uint8_t pwm){
+void reculer (uint8_t vitesse){
+  runPidMoteurs(-vitesse,-vitesse);
+  /*
   reculerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
+  */
 }
 
-void tournerD (uint8_t pwm){
+void tournerD (uint8_t vitesse){
+  runPidMoteurs(vitesse,-0.5*vitesse);
+  /*
   avancerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
+  */
 }
 
-void tournerDsoft (uint8_t pwm, uint8_t pp){
-  avancerMoteurGauche(pwm);
-  avancerMoteurDroit((pp / 100) * pwm);
-}
-
-void tournerG (uint8_t pwm){
+void tournerG (uint8_t vitesse){
+  runPidMoteurs(-0.5*vitesse,vitesse);
+  /*
   reculerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
+  */
 }
 
-void tournerGsoft (uint8_t pwm, uint8_t pp){
-  avancerMoteurDroit(pwm);
-  avancerMoteurGauche((pp / 100) * pwm);
-}
 
 
 void tournerAngleD (uint8_t angle) {
@@ -293,11 +278,12 @@ void interruptionTimer(){
       theta = dist/ENTRAXE;
     }
     angleTotal+=theta;
+    /*
     if(angleTotal>pi){
       angleTotal-=2*pi;
     }else if(angleTotal<-pi){
       angleTotal+=2*pi;
-    }
+    }*/
     x+=distMoy*cos(angleTotal);
     y+=distMoy*sin(angleTotal);
     compteDroit=0;
@@ -322,6 +308,38 @@ void compterGauche() {
     compteGauche++;
   }
   distGauche=((pi*D_ROUE)/NB_TIC)*compteGauche;
+}
+
+
+// -----------------------------------------------------------------------------
+// PID
+// -----------------------------------------------------------------------------
+
+double consigneDroit = 0;
+double consigneGauche = 0;
+ 
+double Kp = 70;
+double Ki = 5;
+double Kd = 2;
+ 
+PID pidDroit(&vitesseDroit, &pwm_Droit, &consigneDroit, Kp, Ki, Kd, DIRECT);
+PID pidGauche(&vitesseGauche, &pwm_Gauche, &consigneGauche, Kp, Ki, Kd, DIRECT);
+
+void initPid() {
+  pidDroit.SetMode(AUTOMATIC);
+  pidDroit.SetOutputLimits(-255, 255);
+  pidGauche.SetMode(AUTOMATIC);
+  pidGauche.SetOutputLimits(-255, 255);
+}
+
+void runPidMoteurs ( int16_t commandeMoteurGauche, int16_t commandeMoteurDroit) {
+  
+    consigneDroit = commandeMoteurDroit;
+    consigneGauche = commandeMoteurGauche;
+    pidDroit.Compute();
+    pidGauche.Compute();
+    setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+
 }
 
 

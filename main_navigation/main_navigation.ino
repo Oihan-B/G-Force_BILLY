@@ -85,6 +85,7 @@ void setup(){
   initCapteurUltrason();
   initSuiviLigne();
   initEncodeurs();
+  initPid();
 
   pinMode(GYROPHARE, OUTPUT);
   digitalWrite(GYROPHARE, LOW);
