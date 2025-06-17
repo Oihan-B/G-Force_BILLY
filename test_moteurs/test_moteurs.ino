@@ -208,6 +208,8 @@ void runPidMoteurs ( float commandeMoteurGauche, float commandeMoteurDroit) {
       pwm_Droit--;
     }
 
+    setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+
 }
 
 

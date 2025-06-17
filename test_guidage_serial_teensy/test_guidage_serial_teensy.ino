@@ -92,25 +92,71 @@ void stopMoteurs() {
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
-void avancer (uint8_t pwm){
+void avancer (float vitesse){
+  runPidMoteurs(vitesse,vitesse);
+  /*
   avancerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
+  */
 }
 
-void reculer (uint8_t pwm){
+void reculer (float vitesse){
+  runPidMoteurs(-vitesse,-vitesse);
+  /*
   reculerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
+  */
 }
 
-void tournerD (uint8_t pwm){
+void tournerD (float vitesse){
+  runPidMoteurs(vitesse,-vitesse);
+  /*
   avancerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
+  */
 }
 
-void tournerG (uint8_t pwm){
+void tournerG (float vitesse){
+  runPidMoteurs(-vitesse,vitesse);
+  /*
   reculerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
+  */
 }
+
+
+// -----------------------------------------------------------------------------
+// PID
+// -----------------------------------------------------------------------------
+
+
+
+void runPidMoteurs ( float commandeMoteurGauche, float commandeMoteurDroit) {
+    
+    if(vitesseGauche<commandeMoteurGauche-marge){
+      pwm_Gauche++;
+    }else if(citesseGauche>commandeMoteurGauche+marge){
+      pwm_Gauche--;
+    }
+
+    if(vitesseDroit<commandeMoteurDroit-marge){
+      pwm_Droit++;
+    }else if(citesseDroit>commandeMoteurDroit+marge){
+      pwm_Droit--;
+    }
+
+    setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+
+}
+
+void avancerDistance(int dist){
+  while(distanceTotal<dist){
+    avancer(SPEED);
+  }
+  stopMoteurs();
+  
+}
+
 
 
 void setup() {
