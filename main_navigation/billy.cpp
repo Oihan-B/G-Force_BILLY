@@ -175,6 +175,12 @@ char suiviLigne(){
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 
+void initMoteurs () {
+  pinMode(PWMMOTEURDROIT, OUTPUT);
+  pinMode(PWMMOTEURGAUCHE, OUTPUT);
+  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
+  pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
+}
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
