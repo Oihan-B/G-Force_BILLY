@@ -1,3 +1,5 @@
+#include <PID_v1.h>
+
 #define PWMMOTEURDROIT 23
 #define DIRECTIONMOTEURDROIT 21
 
@@ -11,8 +13,8 @@
 #define ENCODEURGAUCHEA 28
 #define ENCODEURGAUCHEB 29
 
-#define SPEED 100
-#define TURN_SPEED 100
+#define SPEED 0.3
+#define TURN_SPEED 0.3
 
 
 
@@ -71,6 +73,7 @@ void setup() {
   Serial.begin(9600);
   initEncodeurs();
   initMoteurs();
+  initPid();
 
   myTimer.begin(interruptionTimer, TIMERINTERVALE);
 }
@@ -102,24 +105,54 @@ void stopMoteurs() {
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
-void avancer (int16_t pwm){
+
+void setPwmEtDirectionMoteurs (int16_t pwmMoteurDroit, int16_t pwmMoteurGauche) {
+  if(pwmMoteurDroit>0){
+    avancerMoteurDroit(pwmMoteurDroit);
+  }else if(pwmMoteurDroit<0){
+    reculerMoteurDroit(-pwmMoteurDroit);
+  }
+  if(pwmMoteurGauche>0){
+    avancerMoteurGauche(pwmMoteurGauche);
+  }else if(pwmMoteurGauche<0){
+    reculerMoteurGauche(-pwmMoteurGauche);
+  }
+  if(pwmMoteurDroit==0 && pwmMoteurGauche==0){
+    stopMoteurs();
+  }
+}
+
+
+void avancer (float vitesse){
+  runPidMoteurs(vitesse,vitesse);
+  /*
   avancerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
+  */
 }
 
-void reculer (int16_t pwm){
+void reculer (float vitesse){
+  runPidMoteurs(-vitesse,-vitesse);
+  /*
   reculerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
+  */
 }
 
-void tournerD (int16_t pwm){
+void tournerD (float vitesse){
+  runPidMoteurs(vitesse,-vitesse);
+  /*
   avancerMoteurGauche(pwm);
   reculerMoteurDroit(pwm);
+  */
 }
 
-void tournerG (int16_t pwm){
+void tournerG (float vitesse){
+  runPidMoteurs(-vitesse,vitesse);
+  /*
   reculerMoteurGauche(pwm);
   avancerMoteurDroit(pwm);
+  */
 }
 
 
@@ -135,6 +168,38 @@ void tournerAngleG (uint8_t angle) {
     tournerG(TURN_SPEED);
   }
   stopMoteurs();
+}
+
+
+// -----------------------------------------------------------------------------
+// PID
+// -----------------------------------------------------------------------------
+
+double consigneDroit = 0;
+double consigneGauche = 0;
+ 
+double Kp = 200;
+double Ki = 100;
+double Kd = 0;
+ 
+PID pidDroit(&vitesseDroit, &pwm_Droit, &consigneDroit, Kp, Ki, Kd, DIRECT);
+PID pidGauche(&vitesseGauche, &pwm_Gauche, &consigneGauche, Kp, Ki, Kd, DIRECT);
+
+void initPid() {
+  pidDroit.SetMode(AUTOMATIC);
+  pidDroit.SetOutputLimits(-255, 255);
+  pidGauche.SetMode(AUTOMATIC);
+  pidGauche.SetOutputLimits(-255, 255);
+}
+
+void runPidMoteurs ( float commandeMoteurGauche, float commandeMoteurDroit) {
+  
+    consigneDroit = commandeMoteurDroit;
+    consigneGauche = commandeMoteurGauche;
+    pidDroit.Compute();
+    pidGauche.Compute();
+    setPwmEtDirectionMoteurs((int)pwm_Droit, (int)pwm_Gauche);
+
 }
 
 
@@ -185,15 +250,21 @@ void compterGauche() {
 
 void loop(){
 
-  tournerAngleD(pi/2);
+  tournerD(SPEED);
 
-  if(vitesseDroit>0){
+  Serial.print("Consigne : ");
+  Serial.println(consigneDroit);
+  Serial.println(pwm_Droit);
+  /*if(vitesseDroit>0){
     Serial.print("D : ");
     Serial.println(vitesseDroit);
   }
   if(vitesseGauche>0){
     Serial.print("G : ");
     Serial.println(vitesseGauche);
-  }
+  }*/
+  
+
+  
 
 }

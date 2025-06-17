@@ -8,7 +8,7 @@
 // Variables Odometrie
 // -----------------------------------------------------------------------------
 
-#define SPEED 1;
+#define SPEED 0.5;
 
 #define ENTRAXE 320 
 #define NB_TIC 1560.0 // Nombre de tic par tour de roue
