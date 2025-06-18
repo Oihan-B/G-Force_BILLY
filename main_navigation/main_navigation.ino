@@ -2,7 +2,6 @@
 #include <LiquidCrystal_I2C.h>
 #include "billy.h"
 #include "pins.h"
- 
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 const int boutons[] = { BOUTON_HAUT, BOUTON_BAS, BOUTON_CONF, BOUTON_RET };
@@ -11,61 +10,53 @@ const int NB_BOUTONS = 4;
 // -----------------------------------------------------------------------------
 // États du menu
 // -----------------------------------------------------------------------------
-
-bool    enSousMenu   = false;
-uint8_t selMenu      = 0;    // 0..3
-uint8_t selSous      = 0;    // index dans le sous-menu
-bool    etatParam[4] = { false, false, false, false }; // pour Scenario 2-3
+bool    enSousMenu = false;
+uint8_t selMenu    = 0;    // 0..4
+uint8_t selSous    = 0;    // pour Config vitesse et Scenario 1
 
 // -----------------------------------------------------------------------------
-// Définition du menu
+// Définition du menu principal et des sous-menus
 // -----------------------------------------------------------------------------
-
-#define NB_MENU 4
+#define NB_MENU 5
 const char* menuPrincipal[NB_MENU] = {
   "Supervision BILLY",
   "Config vitesse",
   "Scenario 1",
-  "Scenario 2-3"
+  "Scenario 2",
+  "Scenario 3"
 };
 
-// Nombre d'entrées dans chaque sous-menu
+// Nombre d'entrées dans chaque sous-menu (0 = action directe)
 const uint8_t tailleSousMenu[NB_MENU] = {
-  0,  // pas de sous-menu pour Supervision BILLY
-  6,  // 0.2…0.7 m/s
-  9,  // 3.00…5.00 m par 0.25
-  5   // Scenario 2-3
+  0,  // Supervision BILLY
+  6,  // Config vitesse
+  9,  // Scenario 1
+  0,  // Scenario 2   -> lancement direct
+  0   // Scenario 3   -> lancement direct
 };
 
 // Contenu des sous-menus
-const char* sousMenu1[] = {
+const char* sousMenuVitesse[] = {
   " 0.20 m/s"," 0.30 m/s"," 0.40 m/s",
   " 0.50 m/s"," 0.60 m/s"," 0.70 m/s"
 };
-const char* sousMenu2[] = {
+const char* sousMenuDistance[] = {
   "  3.00 m","  3.25 m","  3.50 m","  3.75 m",
   "  4.00 m","  4.25 m","  4.50 m","  4.75 m","  5.00 m"
-};
-const char* sousMenu3[] = {
-  "Arret point B",
-  "Arret point C",
-  "Retour point A",
-  "Detect obstacles",
-  "Valider mission"
 };
 
 // Pointeurs vers chaque sous-menu (nullptr = pas de sous-menu)
 const char** tousSousMenus[NB_MENU] = {
   nullptr,
-  sousMenu1,
-  sousMenu2,
-  sousMenu3
+  sousMenuVitesse,
+  sousMenuDistance,
+  nullptr,
+  nullptr
 };
 
 // -----------------------------------------------------------------------------
 // Prototypes
 // -----------------------------------------------------------------------------
-
 int  bouton_presse();
 void rafraichirMenu();
 void boutonHaut();
@@ -75,25 +66,22 @@ void boutonRetour();
 void wrapInc(uint8_t &v, uint8_t max);
 void wrapDec(uint8_t &v, uint8_t max);
 
-// Stubs des "actions" à remplacer par votre code
+// Stubs d'actions à remplacer
 void actionSupervisionRobot();
 void actionParametrerVitesse(float v);
 void actionScenario1(float d);
-void lancerMissionParam();
+void actionScenario2();
+void actionScenario3();
 
 // -----------------------------------------------------------------------------
 // Setup
 // -----------------------------------------------------------------------------
-
 void setup(){
-  // boutons en pull-up
   for(int i = 0; i < NB_BOUTONS; i++){
     pinMode(boutons[i], INPUT_PULLUP);
   }
-  // écran
   lcd.init();
   lcd.backlight();
-  // afficher le menu initial
   rafraichirMenu();
 
   // inits BILLY
@@ -106,7 +94,6 @@ void setup(){
 // -----------------------------------------------------------------------------
 // Loop principal
 // -----------------------------------------------------------------------------
-
 void loop(){
   int b = bouton_presse();
   if(b < 0) return;
@@ -118,15 +105,14 @@ void loop(){
 }
 
 // -----------------------------------------------------------------------------
-// Lecture d'un bouton (bloquant jusqu'au relâchement)
+// Lecture d'un bouton (anti-rebond + attente relâchement)
 // -----------------------------------------------------------------------------
-
 int bouton_presse(){
   for(int i = 0; i < NB_BOUTONS; i++){
     int pin = boutons[i];
     if(digitalRead(pin) == LOW){
       delay(20);
-      while(digitalRead(pin) == LOW) ; // attente relâche
+      while(digitalRead(pin) == LOW);
       delay(20);
       return pin;
     }
@@ -135,20 +121,18 @@ int bouton_presse(){
 }
 
 // -----------------------------------------------------------------------------
-// Rafraîchissement de l'affichage avec scroll + curseur mobile
+// Rafraîchissement de l'affichage
 // -----------------------------------------------------------------------------
-
 void rafraichirMenu(){
   const int LINES = 4;
   lcd.clear();
 
   if(!enSousMenu){
-    // menu principal
+    // Menu principal
     int n = NB_MENU;
     int off = selMenu - (LINES - 1);
     if(off < 0)          off = 0;
     if(off > n - LINES)  off = n - LINES;
-
     for(int L = 0; L < LINES; L++){
       int idx = off + L;
       if(idx >= n) break;
@@ -158,27 +142,17 @@ void rafraichirMenu(){
     }
   }
   else {
-    // sous-menu
+    // Sous-menu (Config vitesse ou Scenario 1)
     int n = tailleSousMenu[selMenu];
     int off = selSous - (LINES - 1);
     if(off < 0)          off = 0;
     if(off > n - LINES)  off = n - LINES;
-
     for(int L = 0; L < LINES; L++){
       int idx = off + L;
       if(idx >= n) break;
       lcd.setCursor(0, L);
       lcd.print(idx == selSous ? "> " : "  ");
-
-      // cas Scenario 2-3 avec checkbox pour les 4 premiers
-      if(selMenu == 3 && idx < 4){
-        lcd.print(tousSousMenus[3][idx]);
-        lcd.print(' ');
-        lcd.print(etatParam[idx] ? '1' : '0');
-      }
-      else {
-        lcd.print(tousSousMenus[selMenu][idx]);
-      }
+      lcd.print(tousSousMenus[selMenu][idx]);
     }
   }
 }
@@ -186,7 +160,6 @@ void rafraichirMenu(){
 // -----------------------------------------------------------------------------
 // Navigation haut/bas
 // -----------------------------------------------------------------------------
-
 void boutonHaut(){
   if(!enSousMenu)      wrapDec(selMenu, NB_MENU);
   else                 wrapDec(selSous, tailleSousMenu[selMenu]);
@@ -198,77 +171,75 @@ void boutonBas(){
   rafraichirMenu();
 }
 void wrapInc(uint8_t &v, uint8_t max){
-  v++;
-  if(v >= max) v = 0;
+  if(++v >= max) v = 0;
 }
 void wrapDec(uint8_t &v, uint8_t max){
-  if(v == 0)  v = max - 1;
-  else        v--;
+  if(v == 0) v = max - 1;
+  else       v--;
 }
 
+// -----------------------------------------------------------------------------
+// Bouton CONF
+// -----------------------------------------------------------------------------
 void boutonValider(){
   if(!enSousMenu){
-    // si sous-menu existant, on y entre
     if(tailleSousMenu[selMenu] > 0){
+      // Entrer dans le sous-menu Config vitesse ou Scenario 1
       enSousMenu = true;
       selSous    = 0;
-      rafraichirMenu();
     }
     else {
-      // action directe menu principal
-      if(selMenu == 0){
-        actionSupervisionRobot();
-        lcd.clear();
-        lcd.setCursor(0,0); lcd.print("Supervision en");
-        lcd.setCursor(0,1); lcd.print("cours...");
-        delay(1000);
+      // Action directe
+      lcd.clear();
+      lcd.setCursor(0,0);
+      switch(selMenu){
+        case 0:
+          actionSupervisionRobot();
+          lcd.print("Supervision...");
+          break;
+        case 3:
+          actionScenario2();
+          lcd.print("Scenario 2...");
+          break;
+        case 4:
+          actionScenario3();
+          lcd.print("Scenario 3...");
+          break;
       }
-      rafraichirMenu();
+      delay(1000);
     }
   }
   else {
-    // dans un sous-menu
-    switch(selMenu){
-      case 1: { // Config vitesse
-        float v = 0.2f + 0.1f * selSous;
-        actionParametrerVitesse(v);
-        lcd.clear();
-        lcd.setCursor(0,0); lcd.print("Vitesse reglee");
-        lcd.setCursor(0,1);
-        lcd.print(v,2); lcd.print(" m/s");
-        delay(1000);
-        enSousMenu = false;
-        break;
-      }
-      case 2: { // Scenario 1
-        float d = 3.0f + 0.25f * selSous;
-        actionScenario1(d);
-        lcd.clear();
-        lcd.setCursor(0,0); lcd.print("Scenario 1:");
-        lcd.setCursor(0,1);
-        lcd.print(d,2); lcd.print(" m en cours");
-        delay(1000);
-        enSousMenu = false;
-        break;
-      }
-      case 3:  // Scenario 2-3
-        if(selSous < 4){
-          etatParam[selSous] = !etatParam[selSous];
-        }
-        else {
-          // Valider mission
-          lcd.clear();
-          lcd.setCursor(0,0); lcd.print("Lancement mission");
-          delay(500);
-          lancerMissionParam();
-          enSousMenu = false;
-        }
-        break;
+    // Validation dans un sous-menu
+    if(selMenu == 1){
+      float v = 0.2f + 0.1f * selSous;
+      actionParametrerVitesse(v);
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Vitesse: ");
+      lcd.print(v,2);
+      lcd.print(" m/s");
+      delay(1000);
     }
-    rafraichirMenu();
+    else if(selMenu == 2){
+      float d = 3.0f + 0.25f * selSous;
+      actionScenario1(d);
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Scenario 1:");
+      lcd.setCursor(0,1);
+      lcd.print(d,2);
+      lcd.print(" m en cours");
+      delay(1000);
+    }
+    enSousMenu = false;
   }
+  rafraichirMenu();
 }
 
+// -----------------------------------------------------------------------------
+// Bouton RETOUR
+// -----------------------------------------------------------------------------
 void boutonRetour(){
   if(enSousMenu){
     enSousMenu = false;
@@ -276,15 +247,21 @@ void boutonRetour(){
   }
 }
 
+// -----------------------------------------------------------------------------
+// Stubs d'actions
+// -----------------------------------------------------------------------------
 void actionSupervisionRobot(){
-  // code de supervision BILLY
+  // code existant de supervision BILLY
 }
 void actionParametrerVitesse(float v){
-  // stocker la consigne de vitesse
+  // stocker la vitesse
 }
 void actionScenario1(float d){
-  // scenario 1 distance = d mètres
+  // lancer scénario 1 à la distance d
 }
-void lancerMissionParam(){
-  // exécution mission Scenario 2-3
+void actionScenario2(){
+  // lancer scénario 2
+}
+void actionScenario3(){
+  // lancer scénario 3
 }
