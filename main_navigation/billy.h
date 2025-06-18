@@ -50,6 +50,7 @@ void initEncodeurs();
 void interruptionTimer();
 void compterDroit();
 void compterGauche();
+int distanceAtteinte(int dist);
 
 // -----------------------------------------------------------------------------
 // PID

@@ -10,7 +10,9 @@ initSuiviLigne();
 char decision = suivi_lignes();
 
 while (decision != "C"){
-
+  
+  decision = suivi_lignes();
+  
   if (lectureCapteurUltrason(CAPTEUR_AG) == 0 && lectureCapteurUltrason(CAPTEUR_AG) == 0){ // Interruption si obstacle
     gyro(1);
     contournerObstacle();
@@ -21,7 +23,7 @@ while (decision != "C"){
 
     if (decision == "C"){ 
       gyro(1);
-      stopMoteurs();
+      arreter();
       return 0;
     }
     else if (decision == "A"){
@@ -35,7 +37,7 @@ while (decision != "C"){
     }
     else{
       gyro(1);
-      stopMoteurs();
+      arreter();
       return 0;
     }
 
@@ -43,9 +45,3 @@ while (decision != "C"){
 }
 
 //C'est fini on a livré le colis il y'en a qu'un donc même pas besoin de revenir au spawn en vrai
-
-
-
-
-
-
