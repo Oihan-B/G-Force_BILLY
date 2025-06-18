@@ -11,7 +11,6 @@
 #define ENCODEURGAUCHEB 29
 
 #define SPEED   0.3
-#define TURN_SPEED 0.3
 
 #define ENTRAXE 320     // mm
 #define NB_TIC  840.0   // ticks/tour
@@ -37,6 +36,7 @@ float marge = 0.1;
 
 // Consignes (signées, en rev/s)
 double consigneDroit = 0, consigneGauche = 0;
+double ancienConsigneDroit = 0, ancienConsigneGauche = 0;
 
 #define S1 2
 #define S2 3
@@ -154,6 +154,16 @@ void tournerG(float v) {
   consigneDroit  =  v;
 }
 
+void tournerDsoft(float v, float percent) {
+  consigneGauche = v;
+  consigneDroit  = percent * v;
+}
+
+void tournerGsoft(float v, float percent) {
+  consigneGauche = percent * v;
+  consigneDroit  = v;
+}
+
 void arreter(){
   consigneGauche = consigneDroit = 0;
 }
@@ -169,10 +179,9 @@ void setPwmEtDirectionMoteurs(int16_t pwmGauche, int16_t pwmDroit) {
   if (pwmDroit == 0 && pwmGauche == 0) stopMoteurs();
 }
 
-// --- on ne change plus runPidMoteurs() ici ---
+
 
 void interruptionTimer() {
-  // ← MODIF 2 : calcul de la vitesse en rev/s
   vitesseDroit  = (double)compteDroit  * (1.0 / 0.02) / NB_TIC;
   vitesseGauche = (double)compteGauche * (1.0 / 0.02) / NB_TIC;
 
@@ -208,12 +217,21 @@ void compterGauche() {
 
 
 void runPidMoteurs(float cmdG, float cmdD) {
-  // inchangé
-  if (vitesseGauche < cmdG - marge)  pwm_Gauche++;
-  else if (vitesseGauche > cmdG + marge) pwm_Gauche--;
+  if(cmdG!=ancienConsigneGauche){
+    pwm_Gauche = 0;
+    ancienConsigneGauche = cmdG;
+  }
 
-  if (vitesseDroit < cmdD - marge)   pwm_Droit++;
-  else if (vitesseDroit > cmdD + marge)   pwm_Droit--;
+  if(cmdD!=ancienConsigneDroit){
+    pwm_Droit = 0;
+    ancienConsigneDroit = cmdD;
+  }
+
+  if (vitesseGauche < cmdG - marge)  pwm_Gauche=pwm_Gauche+3;
+  else if (vitesseGauche > cmdG + marge) pwm_Gauche=pwm_Gauche-3;
+
+  if (vitesseDroit < cmdD - marge)   pwm_Droit=pwm_Droit+3;
+  else if (vitesseDroit > cmdD + marge)   pwm_Droit=pwm_Droit-3;
 
   // bornage
   pwm_Gauche = constrain(pwm_Gauche, -255, 255);
@@ -238,7 +256,7 @@ void loop (){
 
   int detections[5] = {0, 0, 0, 0, 0};
   int i;
-
+  
   while (1){
 
     for (i = 0; i < 5; i++){
@@ -259,18 +277,18 @@ void loop (){
 
     else if (!detections[2]) {
       Serial.println("\nTourner à droite pour retrouver la ligne\n");
-      tournerD(TURN_SPEED);
+      tournerD(SPEED);
     } 
 
     else if (!detections[0]) {
       Serial.println("\nTourner à gauche pour retrouver la ligne\n");
-      tournerG(TURN_SPEED);
+      tournerG(SPEED);
     } 
 
     else if (!detections[1]) {
       Serial.println("\nAvancer tout droit\n");
       avancer(SPEED);
-    } 
+    }
 
     else {
       Serial.println("\nLigne perdue : STOP ou reculer\n");
