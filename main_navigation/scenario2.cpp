@@ -4,9 +4,6 @@
 #define SPEED 150
 #define TURN_SPEED 100
 
-initCapteurUltrason();
-initSuiviLigne();
-
 char decision = suivi_lignes();
 
 while (decision != "C"){

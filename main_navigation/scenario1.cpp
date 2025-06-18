@@ -3,7 +3,6 @@
 
 void scenario_1(int dist){
 
-  initSuiviLigne();
   char decision = suivi_lignes();
 
   while(distanceAtteinte(dist)==0){

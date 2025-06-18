@@ -36,11 +36,9 @@ volatile double theta = 0; // radian entre -Pi et Pi
 double consigneDroit = 0;
 double consigneGauche = 0;
 
-
 // -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------
-
 
 void initCapteurUltrason(){
   int i;

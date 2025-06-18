@@ -17,12 +17,6 @@ void contournerObstacle(uint8_t marge);
 void initSuiviLigne();
 char suiviLigne (); 
 
-// A (avancer en suivant la ligne)
-// D (se décaler vers la droite pour récupérer la ligne)
-// G (se décaler vers la gauche pour récupérer la ligne)
-// S (s'arrêter car ligne perdue)
-// C (s'arrêter car checkpoint detectée)
-
 // -----------------------------------------------------------------------------
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
@@ -59,17 +53,9 @@ int distanceAtteinte(int dist);
 void runPidMoteurs(float cmdG, float cmdD);
 
 // -----------------------------------------------------------------------------
-// Monitoring ESP32
-// -----------------------------------------------------------------------------
-
-void monitoring ();
-/*collecte de toutes les données relatives au robot et à la mission et actualisation du site web de supervision*/
-
-// -----------------------------------------------------------------------------
 // GYRO
 // -----------------------------------------------------------------------------
 
 void gyro (uint8_t etat);
-
 
 #endif

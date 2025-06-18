@@ -95,6 +95,12 @@ void setup(){
   lcd.backlight();
   // afficher le menu initial
   rafraichirMenu();
+
+  // inits BILLY
+  initMoteurs();
+  initEncodeurs();
+  initSuiviLigne();
+  initCapteurUltrason();
 }
 
 // -----------------------------------------------------------------------------
