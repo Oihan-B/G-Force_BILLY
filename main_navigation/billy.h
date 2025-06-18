@@ -1,10 +1,6 @@
 #ifndef BILLY_H
 #define BILLY_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
-
 // -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------
@@ -31,7 +27,7 @@ char suiviLigne ();
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 
-
+void initMoteurs();
 void avancerMoteurDroit(uint8_t pwm);
 void avancerMoteurGauche(uint8_t pwm);
 void reculerMoteurDroit (uint8_t pwm);

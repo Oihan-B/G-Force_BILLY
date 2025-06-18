@@ -1,7 +1,4 @@
-#include <stdint.h>
-#include <stdbool.h>
 #include "billy.h"
-#include "billy.cpp"
 #include "pins.h"
 
 #define SPEED 150

@@ -1,5 +1,3 @@
-#include <stdint.h>
-#include <stdbool.h>
 #include <PID_v1.h>
 #include "billy.h"
 #include "pins.h"
@@ -178,6 +176,13 @@ char suiviLigne(){
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
 
+void initMoteurs() {
+  pinMode(PWMMOTEURDROIT, OUTPUT);
+  pinMode(PWMMOTEURGAUCHE, OUTPUT);
+  pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
+  pinMode(PWMMOTEURGAUCHE, OUTPUT);
+  pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
+}
 
 void avancerMoteurDroit(uint8_t pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
@@ -208,34 +213,51 @@ void stopMoteurs() {
 
 
 void setPwmEtDirectionMoteurs(int16_t pwmGauche, int16_t pwmDroit) {
-  if (pwmDroit > 0)        avancerMoteurDroit(pwmDroit);
-  else if (pwmDroit < 0)   reculerMoteurDroit(-pwmDroit);
+  if (pwmDroit > 0)        
+    avancerMoteurDroit(pwmDroit);
+  else if (pwmDroit < 0)   
+    reculerMoteurDroit(-pwmDroit);
 
-  if (pwmGauche > 0)        avancerMoteurGauche(pwmGauche);
-  else if (pwmGauche < 0)   reculerMoteurGauche(-pwmGauche);
+  if (pwmGauche > 0)        
+    avancerMoteurGauche(pwmGauche);
+  else if (pwmGauche < 0)   
+    reculerMoteurGauche(-pwmGauche);
 
-  if (pwmDroit == 0 && pwmGauche == 0) stopMoteurs();
+  if (pwmDroit == 0 && pwmGauche == 0) 
+    stopMoteurs();
 }
 
 void avancer(float v) {
   consigneDroit = consigneGauche = v;
 }
+
 void reculer(float v) {
   consigneDroit = consigneGauche = -v;
 }
+
 void tournerD(float v) {
   consigneGauche =  v;
   consigneDroit  = -v;
 }
+
 void tournerG(float v) {
   consigneGauche = -v;
   consigneDroit  =  v;
 }
 
+void tournerDsoft(float v, float percent) {
+  consigneGauche = v;
+  consigneDroit  = percent * v;
+}
+
+void tournerGsoft(float v, float percent) {
+  consigneGauche = percent * v;
+  consigneDroit  = v;
+}
+
 void arreter(){
   consigneGauche = consigneDroit = 0;
 }
-
 
 void tournerAngleD (uint8_t angle) {
   while (angleTotal<angle-0.1){
@@ -332,16 +354,6 @@ void runPidMoteurs(float cmdG, float cmdD) {
 
   setPwmEtDirectionMoteurs((int)pwm_Gauche, (int)pwm_Droit);
 }
-
-
-// -----------------------------------------------------------------------------
-// Monitoring ESP32
-// -----------------------------------------------------------------------------
-
-void monitoring (){
-  
-}
-/*collecte de toutes les données relatives au robot et à la mission et actualisation du site web de supervision*/
 
 // -----------------------------------------------------------------------------
 // GYRO
