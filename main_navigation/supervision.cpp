@@ -56,11 +56,11 @@ void loop() {
   }
 }
 
-void actualiser_supervision(float vit, float posX, float posY) {
+void actualiser_site_web(float vit, float posX, float posY, float CAPTEUR_CG, float CAPTEUR_AG, float CAPTEUR_AD, float CAPTEUR_CD, bool etatGyro) {
   // Exemple de trame : $VIT#12.3$POSX#45.6$POSY#0.0\n
   char buf[64];
   int len = snprintf(buf, sizeof(buf),
-                     "$VIT#%.2f$POSX#%.2f$POSY#%.2f\n",
+                     "$VIT#%.2f$POSX#%.2f$POSY#%.2f$CAPTEUR_CG#%.2f$CAPTEUR_AG#%.2f$CAPTEUR_AD#%.2f$CAPTEUR_CD#%.2f$ETATGYRO#%.2f\n",
                      vit, posX, posY);
   Serial4.write(buf, len);
 }

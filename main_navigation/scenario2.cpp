@@ -1,43 +1,46 @@
 #include "billy.h"
 #include "pins.h"
 
-#define SPEED 150
-#define TURN_SPEED 100
+void scenario_2(float consigne_vitesse){
 
-char decision = suivi_lignes();
-
-while (decision != "C"){
+  initCapteurUltrason();
+  initSuiviLigne();
   
-  decision = suivi_lignes();
-  
-  if (lectureCapteurUltrason(CAPTEUR_AG) == 0 && lectureCapteurUltrason(CAPTEUR_AG) == 0){ // Interruption si obstacle
-    gyro(1);
-    contournerObstacle();
-  }
+  char decision = suivi_lignes();
 
-  else{
+  while (decision != "C"){
+    
     decision = suivi_lignes();
-
-    if (decision == "C"){ 
+    
+    if (lectureCapteurUltrason(CAPTEUR_AG) == 0 && lectureCapteurUltrason(CAPTEUR_AG) == 0){ // Interruption si obstacle
       gyro(1);
-      arreter();
-      return 0;
+      contournerObstacle();
     }
-    else if (decision == "A"){
-      avancer(SPEED);
-    }
-    else if (decision == "G"){
-      tournerG(TURN_SPEED);
-    }
-    else if (decision == "D"){
-      tournerD(TURN_SPEED);
-    }
+  
     else{
-      gyro(1);
-      arreter();
-      return 0;
+      decision = suivi_lignes();
+  
+      if (decision == "C"){ 
+        gyro(1);
+        arreter();
+        return 0;
+      }
+      else if (decision == "A"){
+        avancer(consigne_vitesse);
+      }
+      else if (decision == "G"){
+        tournerG(consigne_vitesse);
+      }
+      else if (decision == "D"){
+        tournerD(consigne_vitesse);
+      }
+      else{
+        gyro(1);
+        arreter();
+        return 0;
+      }
+  
     }
-
   }
 }
 

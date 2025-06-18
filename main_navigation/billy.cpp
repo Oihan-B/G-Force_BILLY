@@ -372,3 +372,40 @@ void gyro (uint8_t etat){
     digitalWrite(GYROPHARE, HIGH);
   }
 }
+
+
+// -----------------------------------------------------------------------------
+// IHM
+// -----------------------------------------------------------------------------
+
+int bouton_presse(){
+  for(int i = 0; i < NB_BOUTONS; i++){
+    int pin = boutons[i];
+    if(digitalRead(pin) == LOW){
+      delay(20);
+      while(digitalRead(pin) == LOW);
+      delay(20);
+      return pin;
+    }
+  }
+  return -1;
+}
+
+void afficherEcran(*char txt1, *char txt2, *char txt3, *char txt4){
+  if(txt1){
+    lcd.setCursor(0, 0);
+    lcd.print(txt1);
+  }
+  if(txt2){
+    lcd.setCursor(0, 1);
+    lcd.print(txt2);
+  }
+  if(txt3){
+    lcd.setCursor(0, 2);
+    lcd.print(txt3);
+  }
+  if(txt4){
+    lcd.setCursor(0, 3);
+    lcd.print(txt4);
+  }
+}

@@ -1,7 +1,7 @@
 #include "billy.h"
 #include "pins.h"
 
-void scenario_1(int dist){
+void scenario_1(int dist, float consigne_vitesse){
 
   char decision = suivi_lignes();
 

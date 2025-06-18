@@ -68,10 +68,7 @@ void wrapDec(uint8_t &v, uint8_t max);
 
 // Stubs d'actions à remplacer
 void actionSupervisionRobot();
-void actionParametrerVitesse(float v);
-void actionScenario1(float d);
-void actionScenario2();
-void actionScenario3();
+
 
 // -----------------------------------------------------------------------------
 // Setup
@@ -198,11 +195,11 @@ void boutonValider(){
           lcd.print("Supervision...");
           break;
         case 3:
-          actionScenario2();
+          scenario_2(v);
           lcd.print("Scenario 2...");
           break;
         case 4:
-          actionScenario3();
+          scenario_3(v);
           lcd.print("Scenario 3...");
           break;
       }
@@ -213,7 +210,6 @@ void boutonValider(){
     // Validation dans un sous-menu
     if(selMenu == 1){
       float v = 0.2f + 0.1f * selSous;
-      actionParametrerVitesse(v);
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Vitesse: ");
@@ -222,8 +218,8 @@ void boutonValider(){
       delay(1000);
     }
     else if(selMenu == 2){
-      float d = 3.0f + 0.25f * selSous;
-      actionScenario1(d);
+      float d = 3.0f + 0.25f * selSous * 1000;
+      scenario_1(d, v);
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Scenario 1:");
@@ -252,16 +248,4 @@ void boutonRetour(){
 // -----------------------------------------------------------------------------
 void actionSupervisionRobot(){
   // code existant de supervision BILLY
-}
-void actionParametrerVitesse(float v){
-  // stocker la vitesse
-}
-void actionScenario1(float d){
-  // lancer scénario 1 à la distance d
-}
-void actionScenario2(){
-  // lancer scénario 2
-}
-void actionScenario3(){
-  // lancer scénario 3
 }

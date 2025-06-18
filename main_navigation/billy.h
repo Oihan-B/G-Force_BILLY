@@ -58,4 +58,11 @@ void runPidMoteurs(float cmdG, float cmdD);
 
 void gyro (uint8_t etat);
 
+// -----------------------------------------------------------------------------
+// IHM
+// -----------------------------------------------------------------------------
+
+int bouton_presse();
+void afficherEcran(*char txt1, *char txt2, *char txt3, *char txt4);
+
 #endif
