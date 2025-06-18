@@ -4,6 +4,12 @@
 #define PWMMOTEURGAUCHE 22
 #define DIRECTIONMOTEURGAUCHE 20
 
+#define ENCODEURDROITA 25
+#define ENCODEURDROITB 24
+
+#define ENCODEURGAUCHEA 28
+#define ENCODEURGAUCHEB 29
+
 #define SPEED   0.3
 #define TURN_SPEED 0.3
 
@@ -55,9 +61,20 @@ void initMoteurs () {
   pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
 }
 
+void initEncodeurs() {
+  myTimer.begin(interruptionTimer, TIMERINTERVALE);
+  pinMode(ENCODEURDROITA, INPUT);
+  pinMode(ENCODEURDROITB, INPUT);
+  pinMode(ENCODEURGAUCHEA, INPUT);
+  pinMode(ENCODEURGAUCHEB, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODEURDROITA), compterDroit, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODEURGAUCHEA), compterGauche, CHANGE);
+}
+
 void setup() {
   Serial.begin(9600);
   initMoteurs();
+  initEncodeurs();
 
   int i;
 
@@ -228,26 +245,29 @@ void loop (){
       detections[i] = digitalRead(capteurs[i]); // 0 SOL // 1 LIGNE
     }
 
+    detections[3] = 1;
+    detections[4] = 1;
+
     for (i = 0; i < 5; i++){
       Serial.println(detections[i]);
     }
 
-    if (!detections[1] && !detections[2] && !detections[3]) {
+    if (!detections[0] && !detections[1] && !detections[2]) {
       Serial.println("\nCheckpoint detecte\n");
       arreter();
     }
 
-    else if (!detections[3] || !detections[4]) {
+    else if (!detections[2]) {
       Serial.println("\nTourner à droite pour retrouver la ligne\n");
       tournerD(TURN_SPEED);
     } 
 
-    else if (!detections[0] || !detections[1]) {
+    else if (!detections[0]) {
       Serial.println("\nTourner à gauche pour retrouver la ligne\n");
       tournerG(TURN_SPEED);
     } 
 
-    else if (!detections[2]) {
+    else if (!detections[1]) {
       Serial.println("\nAvancer tout droit\n");
       avancer(SPEED);
     } 

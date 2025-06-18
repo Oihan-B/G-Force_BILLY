@@ -166,7 +166,7 @@ void setup() {
 }
 
 void loop(){
-  if (distanceTotal < 1000.0) {
+  /*if (distanceTotal < 1000.0) {
     // on positionne la consigne
     avancer(SPEED);
     // --- MODIF 4 : on ne régule qu’après la mesure 20 ms ---
@@ -174,5 +174,8 @@ void loop(){
   } else {
     stopMoteurs();
     while(1);  // blocage une fois l’objectif atteint
+  }*/
+  if(vitesseDroit){
+    Serial.p
   }
 }
