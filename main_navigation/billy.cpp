@@ -174,23 +174,23 @@ char suiviLigne(){
   detections[4] = 1;
 
   if (!detections[0] && !detections[1] && !detections[2]) {
-    return "C";
+    return 'C';
   }
 
   else if (!detections[2]) {
-    return "D";
+    return 'D';
   } 
 
   else if (!detections[0]) {
-    return "G";
+    return 'G';
   } 
 
   else if (!detections[1]) {
-    return "A";
+    return 'A';
   }
 
   else {
-    return "S";
+    return 'S';
   }
 
   //META CAPTEUR PAS CASSE
@@ -287,13 +287,12 @@ void reculer(float v) {
   consigneDroit = consigneGauche = -v;
 }
 
-void tournerD(float v) {
+void tournerD(float v, float percent) {
   consigneGauche =  v;
-  consigneDroit  = -v;
+  consigneDroit  = -v * percent;
 }
-
-void tournerG(float v) {
-  consigneGauche = -v;
+void tournerG(float v, float percent) {
+  consigneGauche = -v * percent;
   consigneDroit  =  v;
 }
 
@@ -313,14 +312,14 @@ void arreter(){
 
 void tournerAngleD (float angle) {
   while (angleTotal<angle-0.1){
-    tournerD(SPEED);
+    tournerD(SPEED, 0.75);
   }
   arreter();
 }
 
 void tournerAngleG (float angle) {
   while (angleTotal>angle+0.1){
-    tournerG(SPEED);
+    tournerG(SPEED, 0.75);
   }
   arreter();
 }
@@ -388,7 +387,7 @@ void compterGauche() {
 
 
 int distanceAtteinte(int dist){
-  if(dist>=distanceTotal){
+  if(dist<=distanceTotal){
     return 1;
   }
   return 0;

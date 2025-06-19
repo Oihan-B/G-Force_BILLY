@@ -25,17 +25,17 @@ void scenario_2(float consigne_vitesse){
     else{
       decision = suiviLigne();
   
-      if (decision == "C"){ 
+      if (decision == 'C'){ 
         gyro(1);
         arreter();
       }
-      else if (decision == "A"){
+      else if (decision == 'A'){
         avancer(consigne_vitesse);
       }
-      else if (decision == "G"){
+      else if (decision == 'G'){
         tournerGsoft(consigne_vitesse, 0.5);
       }
-      else if (decision == "D"){
+      else if (decision == 'D'){
         tournerDsoft(consigne_vitesse, 0.5);
       }
       else{

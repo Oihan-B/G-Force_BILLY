@@ -16,7 +16,7 @@ uint8_t selMenu    = 0;    // 0..4
 uint8_t selSous    = 0;    // pour Config vitesse et Scenario 1
 
 float vitesse = 0.3;
-float distance = 1;
+float distance = 1000;
 
 // -----------------------------------------------------------------------------
 // Définition du menu principal et des sous-menus
@@ -222,7 +222,7 @@ void boutonValider(){
       delay(1000);
     }
     else if(selMenu == 2){
-      distance = 3.0f + 0.25f * selSous * 1000;
+      distance = (3.0f + 0.25f * selSous) * 1000;
       scenario_1(distance, vitesse);
       lcd.clear();
       lcd.setCursor(0,0);
