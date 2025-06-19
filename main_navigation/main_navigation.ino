@@ -90,6 +90,7 @@ void setup(){
   initEncodeurs();
   initSuiviLigne();
   initCapteurUltrason();
+  pinMode(GYROPHARE, OUTPUT);
 }
 
 // -----------------------------------------------------------------------------
@@ -199,12 +200,14 @@ void boutonValider(){
           lcd.print("Supervision...");
           break;
         case 3:
-          scenario_2(vitesse);
           lcd.print("Scenario 2...");
+          delay(2000);
+          scenario_2(vitesse);
           break;
         case 4:
-          scenario_3(vitesse);
           lcd.print("Scenario 3...");
+          delay(2000);
+          scenario_3(vitesse);
           break;
       }
       delay(1000);
@@ -223,14 +226,14 @@ void boutonValider(){
     }
     else if(selMenu == 2){
       distance = (3.0f + 0.25f * selSous) * 1000;
-      scenario_1(distance, vitesse);
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Scenario 1:");
       lcd.setCursor(0,1);
       lcd.print(distance,2);
       lcd.print(" m en cours");
-      delay(1000);
+      delay(3000);
+      scenario_1(distance, vitesse);
     }
     enSousMenu = false;
   }

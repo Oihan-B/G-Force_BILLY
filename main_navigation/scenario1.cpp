@@ -4,6 +4,11 @@
 void scenario_1(float dist, float consigne_vitesse){
 
   gyro(1);
+  
+  distanceTotal   = 0;
+  compteDroit     = 0;
+  compteGauche    = 0;
+  x = y = theta = 0;
 
   char decision = suiviLigne();
 
