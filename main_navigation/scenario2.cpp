@@ -2,9 +2,6 @@
 #include "pins.h"
 
 void scenario_2(float consigne_vitesse){
-
-  initCapteurUltrason();
-  initSuiviLigne();
   
   char decision = suiviLigne();
   float AG;

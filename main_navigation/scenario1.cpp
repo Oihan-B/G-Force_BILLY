@@ -25,4 +25,6 @@ void scenario_1(float dist, float consigne_vitesse){
       arreter();
     }   
   }
+
+  arreter();
 }

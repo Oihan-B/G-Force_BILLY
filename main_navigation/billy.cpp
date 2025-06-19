@@ -11,13 +11,6 @@
 // Variables Odometrie
 // -----------------------------------------------------------------------------
 
-#define SPEED 0.3
-
-#define ENTRAXE 320 
-#define NB_TIC 1560.0 // Nombre de tic par tour de roue
-#define D_ROUE 100 // Diametre roue
-#define TIMERINTERVALE 20000 // ms
-
 IntervalTimer myTimer;
 
 volatile double pi=3.14159;
@@ -29,8 +22,8 @@ volatile double distDroit=0;
 volatile double distGauche=0;
 volatile double vitesseDroit = 0;  // vitesse du moteur en tics
 volatile double vitesseGauche = 0; // vitesse du moteur en tics
-volatile double pwm_Droit=60;
-volatile double pwm_Gauche=60;
+volatile double pwm_Droit=0;
+volatile double pwm_Gauche=0;
 volatile double intervalle=0.2;
 volatile double distanceTotal = 0; //mm
 volatile double angleTotal = 0; // radian
@@ -229,7 +222,6 @@ char suiviLigne(){
 
 void initMoteurs() {
   pinMode(PWMMOTEURDROIT, OUTPUT);
-  pinMode(PWMMOTEURGAUCHE, OUTPUT);
   pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
   pinMode(PWMMOTEURGAUCHE, OUTPUT);
   pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);

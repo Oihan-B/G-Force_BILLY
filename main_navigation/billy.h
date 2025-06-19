@@ -4,6 +4,43 @@
 
 
 // -----------------------------------------------------------------------------
+// VARIABLES
+// -----------------------------------------------------------------------------
+
+#define SPEED 0.3
+
+#define ENTRAXE 320 
+#define NB_TIC 1560.0 // Nombre de tic par tour de roue
+#define D_ROUE 100 // Diametre roue
+#define TIMERINTERVALE 20000 // ms
+
+extern IntervalTimer myTimer;
+
+extern volatile double pi;
+extern volatile double compteDroit;
+extern volatile double compteGauche;
+extern volatile double dist;
+extern volatile double distMoy;
+extern volatile double distDroit;
+extern volatile double distGauche;
+extern volatile double vitesseDroit;
+extern volatile double vitesseGauche;
+extern volatile double pwm_Droit;
+extern volatile double pwm_Gauche;
+extern volatile double intervalle;
+extern volatile double distanceTotal;  // mm
+extern volatile double angleTotal;     // radians
+extern volatile double x;              // mm
+extern volatile double y;              // mm
+extern volatile double theta;          // radian (-π … +π)
+
+extern float  marge;
+extern double ancienConsigneDroit;
+extern double ancienConsigneGauche;
+extern double consigneDroit;
+extern double consigneGauche;
+
+// -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------
 
