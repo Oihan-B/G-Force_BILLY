@@ -1,5 +1,6 @@
-#include <WiFi.h>
+/*
 #include <ESP_Mail_Client.h>
+#include <Wifi.h>
 
 const char* WIFI_SSID     = "Nothing_1";
 const char* WIFI_PASSWORD = "1415926535";
@@ -77,3 +78,4 @@ void setup(){
 void loop(){
   // Le mail n'est envoye qu'une fois au demarrage pour l'instant
 }
+*/

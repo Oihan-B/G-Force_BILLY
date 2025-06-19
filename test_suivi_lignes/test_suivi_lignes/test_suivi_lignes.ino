@@ -147,21 +147,21 @@ void reculer(float v) {
 }
 void tournerD(float v) {
   consigneGauche =  v;
-  consigneDroit  = -v;
+  consigneDroit  = -v*0.75;
 }
 void tournerG(float v) {
-  consigneGauche = -v;
+  consigneGauche = -v*0.75;
   consigneDroit  =  v;
 }
 
 void tournerDsoft(float v, float percent) {
-  consigneGauche = v;
-  consigneDroit  = percent * v;
+  consigneGauche = (1+2*percent)* v;
+  consigneDroit  = 0*v;
 }
 
 void tournerGsoft(float v, float percent) {
-  consigneGauche = percent * v;
-  consigneDroit  = v;
+  consigneGauche = 0*v;
+  consigneDroit  = (1+2*percent)*v;
 }
 
 void arreter(){

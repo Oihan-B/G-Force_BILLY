@@ -1,3 +1,4 @@
+/*
 #include "billy.h"
 #include "pins.h"
 
@@ -41,7 +42,7 @@ void loop() {
       case 'D': tournerD(TURN_SPEED);  break;
       case 'S': stopMoteurs();         break;
       case 'M': avancerDistance(1000); break;
-      default: /* ignore */            break;
+      default:         break;
     }
   }
 
@@ -64,3 +65,4 @@ void actualiser_site_web(float vit, float posX, float posY, float CAPTEUR_CG, fl
                      vit, posX, posY);
   Serial4.write(buf, len);
 }
+*/

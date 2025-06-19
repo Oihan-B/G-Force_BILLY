@@ -1,13 +1,15 @@
+#include <LiquidCrystal_I2C.h>
 #ifndef BILLY_H
 #define BILLY_H
+
 
 // -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------
 
 void initCapteurUltrason();
-float lectureCapteurUltrason(uint8_t capteur, uint8_t size);
-void contournerObstacle(uint8_t marge);
+float lectureCapteurUltrason(int capteur, int size);
+void contournerObstacle();
 
 
 // -----------------------------------------------------------------------------
@@ -22,18 +24,20 @@ char suiviLigne ();
 // -----------------------------------------------------------------------------
 
 void initMoteurs();
-void avancerMoteurDroit(uint8_t pwm);
-void avancerMoteurGauche(uint8_t pwm);
-void reculerMoteurDroit (uint8_t pwm);
-void reculerMoteurGauche (uint8_t pwm);
+void avancerMoteurDroit(int pwm);
+void avancerMoteurGauche(int pwm);
+void reculerMoteurDroit (int pwm);
+void reculerMoteurGauche (int pwm);
 void stopMoteurs();
-void avancer (uint8_t pwm);
-void reculer (uint8_t pwm);
-void tournerD (uint8_t pwm);
-void tournerG (uint8_t pwm);
+void avancer (float v);
+void reculer (float v);
+void tournerD (float v);
+void tournerG (float v);
+void tournerDsoft(float v, float percent);
+void tournerGsoft(float v, float percent);
 void arreter();
-void tournerAngleD (uint8_t angle);
-void tournerAngleG (uint8_t angle);
+void tournerAngleD (float angle);
+void tournerAngleG (float angle);
 
 
 // -----------------------------------------------------------------------------
@@ -56,13 +60,22 @@ void runPidMoteurs(float cmdG, float cmdD);
 // GYRO
 // -----------------------------------------------------------------------------
 
-void gyro (uint8_t etat);
+void gyro (int etat);
 
 // -----------------------------------------------------------------------------
 // IHM
 // -----------------------------------------------------------------------------
 
-int bouton_presse();
-void afficherEcran(*char txt1, *char txt2, *char txt3, *char txt4);
+extern LiquidCrystal_I2C lcd;
+int boutonPresse();
+void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4);
+
+// -----------------------------------------------------------------------------
+// SCENARIOS
+// -----------------------------------------------------------------------------
+
+void scenario_1(float dist, float consigne_vitesse);
+void scenario_2(float consigne_vitesse);
+void scenario_3(float consigne_vitesse);
 
 #endif

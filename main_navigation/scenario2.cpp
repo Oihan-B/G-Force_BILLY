@@ -6,38 +6,41 @@ void scenario_2(float consigne_vitesse){
   initCapteurUltrason();
   initSuiviLigne();
   
-  char decision = suivi_lignes();
+  char decision = suiviLigne();
+  float AG;
+  float AD;
 
   while (decision != "C"){
     
-    decision = suivi_lignes();
+    decision = suiviLigne();
+
+    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
     
-    if (lectureCapteurUltrason(CAPTEUR_AG) == 0 && lectureCapteurUltrason(CAPTEUR_AG) == 0){ // Interruption si obstacle
+    if (AG == 0 && AD == 0){ // Interruption si obstacle
       gyro(1);
       contournerObstacle();
     }
   
     else{
-      decision = suivi_lignes();
+      decision = suiviLigne();
   
       if (decision == "C"){ 
         gyro(1);
         arreter();
-        return 0;
       }
       else if (decision == "A"){
         avancer(consigne_vitesse);
       }
       else if (decision == "G"){
-        tournerG(consigne_vitesse);
+        tournerGsoft(consigne_vitesse, 0.5);
       }
       else if (decision == "D"){
-        tournerD(consigne_vitesse);
+        tournerDsoft(consigne_vitesse, 0.5);
       }
       else{
         gyro(1);
         arreter();
-        return 0;
       }
   
     }

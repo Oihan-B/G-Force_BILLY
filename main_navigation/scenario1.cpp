@@ -1,27 +1,26 @@
 #include "billy.h"
 #include "pins.h"
 
-void scenario_1(int dist, float consigne_vitesse){
+void scenario_1(float dist, float consigne_vitesse){
 
-  char decision = suivi_lignes();
+  char decision = suiviLigne();
 
   while(distanceAtteinte(dist)==0){
 
-    decision = suivi_lignes();
+    decision = suiviLigne();
 
     if (decision == "A"){
       avancer(consigne_vitesse);
     }
     else if (decision == "G"){
-      tournerG(consigne_vitesse);
+      tournerGsoft(consigne_vitesse, 0.5);
     }
     else if (decision == "D"){
-      tournerD(consigne_vitesse);
+      tournerDsoft(consigne_vitesse, 0.5);
     }
     else{
       gyro(1);
       arreter();
-      return 0;
     }   
   }
 }

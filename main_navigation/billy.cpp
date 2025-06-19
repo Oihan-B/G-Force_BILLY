@@ -1,12 +1,17 @@
 #include <PID_v1.h>
+#include <math.h>
+#include <Arduino.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include "billy.h"
 #include "pins.h"
+
 
 // -----------------------------------------------------------------------------
 // Variables Odometrie
 // -----------------------------------------------------------------------------
 
-#define SPEED 0.3;
+#define SPEED 0.3
 
 #define ENTRAXE 320 
 #define NB_TIC 1560.0 // Nombre de tic par tour de roue
@@ -15,9 +20,9 @@
 
 IntervalTimer myTimer;
 
-volatile double pi=math.pi;
-volatile int16_t compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
-volatile int16_t compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
+volatile double pi=3.14159;
+volatile double compteDroit = 0;  // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 0 
+volatile double compteGauche = 0; // comptage de tics d'encoder qui sera incrémenté sur interruption " On change " sur l'interruption 1 
 volatile double dist=0;
 volatile double distMoy=0;
 volatile double distDroit=0;
@@ -33,6 +38,10 @@ volatile double x = 0; //mm
 volatile double y = 0; //mm
 volatile double theta = 0; // radian entre -Pi et Pi
 
+float marge = 0.1;
+
+double ancienConsigneDroit = 0;
+double ancienConsigneGauche = 0;
 double consigneDroit = 0;
 double consigneGauche = 0;
 
@@ -45,34 +54,48 @@ void initCapteurUltrason(){
   int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
 
   for (i = 0; i < 4; i++) {
-    pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
+    pinMode(capteurs_ultrasons[i], INPUT);
   }
 
   pinMode(TRIGGER, OUTPUT);
 }
 
-float lectureCapteurUltrason(int capteur) {
+float lectureCapteurUltrason(int capteur, int size) {
   unsigned long duree;
-  float distance_cm;
+  float distances_cm[size];
+  int i;
+  float min = 0;
 
-  digitalWrite(TRIGGER, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIGGER, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER, LOW);
+  for (i = 0; i < size; i++){
+      digitalWrite(TRIGGER, LOW);
+      delayMicroseconds(2);
+      digitalWrite(TRIGGER, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIGGER, LOW);
 
-  duree = pulseIn(capteur, HIGH, 30000UL);
+      duree = pulseIn(capteur, HIGH, 30000UL);
 
-  distance_cm = duree * 0.034f / 2.0f;
-
-  if (distance_cm < 0 || distance_cm > 50){
-    distance_cm = 0;
+      distances_cm[i] = duree * 0.034f / 2.0f;
+      delay(50);
   }
 
-  return distance_cm;
+  for (i = 0; i < size; i++){ // On garde la detection minimale parmis x detections pour éviter les perturbations
+    if (i == 0){
+      min = distances_cm[i];
+    }
+    else if (distances_cm[i] < min){
+      min = distances_cm[i];
+    }
+  }
+
+  if (min < 5 || min > 30){ // Si c'est inférieure à 5 cm potentiellement une perturbation donc osef, > 30 aussi osef
+    min = 0;
+  }
+  return min;
 }
 
 void contournerObstacle() {
+  /*
   arreter(); // Arrêter les moteurs pour éviter les collisions
   if (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
     if (lectureCapteurUltrason(CAPTEUR_CD) !=0) {
@@ -114,6 +137,7 @@ void contournerObstacle() {
     }
     tournerAngleG(90); // Revenir à la trajectoire initiale
   }
+  */
 }
 
 
@@ -136,13 +160,41 @@ int lectureCapteurLigne(int capteur_id) {
 }
 
 char suiviLigne(){ 
-
+  int capteurs[5] = {S1, S2, S3, S4, S5};
   int detections[5];
+  int i;
 
   for (i = 0; i < 5; i++){
-    detections[i] = lectureCapteurLigne(i)); // 0 SOL // 1 LIGNE
+    detections[i] = digitalRead(capteurs[i]); // 0 SOL // 1 LIGNE
   }
 
+  //META CAPTEUR CASSE JONATHAN
+
+  detections[3] = 1;
+  detections[4] = 1;
+
+  if (!detections[0] && !detections[1] && !detections[2]) {
+    return "C";
+  }
+
+  else if (!detections[2]) {
+    return "D";
+  } 
+
+  else if (!detections[0]) {
+    return "G";
+  } 
+
+  else if (!detections[1]) {
+    return "A";
+  }
+
+  else {
+    return "S";
+  }
+
+  //META CAPTEUR PAS CASSE
+  /*
   if (detections[1] && detections[2] && detections[3]) {
     return "C";
   }
@@ -162,6 +214,7 @@ char suiviLigne(){
   else {
     return "S";
   }
+  */
 }
 // A (avancer en suivant la ligne)
 // D (se décaler vers la droite pour récupérer la ligne)
@@ -180,24 +233,25 @@ void initMoteurs() {
   pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
   pinMode(PWMMOTEURGAUCHE, OUTPUT);
   pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
+  stopMoteurs();
 }
 
-void avancerMoteurDroit(uint8_t pwm) {
+void avancerMoteurDroit(int pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
-void avancerMoteurGauche(uint8_t pwm) {
+void avancerMoteurGauche(int pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
 }
 
-void reculerMoteurDroit (uint8_t pwm) {
+void reculerMoteurDroit (int pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURDROIT, LOW);
 }
 
-void reculerMoteurGauche (uint8_t pwm) {
+void reculerMoteurGauche (int pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
   digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
@@ -210,7 +264,7 @@ void stopMoteurs() {
 }
 
 
-void setPwmEtDirectionMoteurs(int16_t pwmGauche, int16_t pwmDroit) {
+void setPwmEtDirectionMoteurs(int pwmGauche, int pwmDroit) {
   if (pwmDroit > 0)        
     avancerMoteurDroit(pwmDroit);
   else if (pwmDroit < 0)   
@@ -257,14 +311,14 @@ void arreter(){
   consigneGauche = consigneDroit = 0;
 }
 
-void tournerAngleD (uint8_t angle) {
+void tournerAngleD (float angle) {
   while (angleTotal<angle-0.1){
     tournerD(SPEED);
   }
   arreter();
 }
 
-void tournerAngleG (uint8_t angle) {
+void tournerAngleG (float angle) {
   while (angleTotal>angle+0.1){
     tournerG(SPEED);
   }
@@ -334,7 +388,7 @@ void compterGauche() {
 
 
 int distanceAtteinte(int dist){
-  if(dist>=distanceTotale){
+  if(dist>=distanceTotal){
     return 1;
   }
   return 0;
@@ -346,12 +400,21 @@ int distanceAtteinte(int dist){
 
 
 void runPidMoteurs(float cmdG, float cmdD) {
-  // inchangé
-  if (vitesseGauche < cmdG - marge)  pwm_Gauche++;
-  else if (vitesseGauche > cmdG + marge) pwm_Gauche--;
+  if(cmdG!=ancienConsigneGauche){
+    pwm_Gauche = 0;
+    ancienConsigneGauche = cmdG;
+  }
 
-  if (vitesseDroit < cmdD - marge)   pwm_Droit++;
-  else if (vitesseDroit > cmdD + marge)   pwm_Droit--;
+  if(cmdD!=ancienConsigneDroit){
+    pwm_Droit = 0;
+    ancienConsigneDroit = cmdD;
+  }
+
+  if (vitesseGauche < cmdG - marge)  pwm_Gauche=pwm_Gauche+3;
+  else if (vitesseGauche > cmdG + marge) pwm_Gauche=pwm_Gauche-3;
+
+  if (vitesseDroit < cmdD - marge)   pwm_Droit=pwm_Droit+3;
+  else if (vitesseDroit > cmdD + marge)   pwm_Droit=pwm_Droit-3;
 
   // bornage
   pwm_Gauche = constrain(pwm_Gauche, -255, 255);
@@ -364,7 +427,7 @@ void runPidMoteurs(float cmdG, float cmdD) {
 // GYRO
 // -----------------------------------------------------------------------------
 
-void gyro (uint8_t etat){
+void gyro (int etat){
   if (etat == 1){
     digitalWrite(GYROPHARE, HIGH);
   }
@@ -378,8 +441,11 @@ void gyro (uint8_t etat){
 // IHM
 // -----------------------------------------------------------------------------
 
-int bouton_presse(){
-  for(int i = 0; i < NB_BOUTONS; i++){
+int boutonPresse(){
+  int i;
+  int NB_BOUTONS = 4;
+  int boutons[] = { BOUTON_HAUT, BOUTON_BAS, BOUTON_CONF, BOUTON_RET };
+  for(i = 0; i < NB_BOUTONS; i++){
     int pin = boutons[i];
     if(digitalRead(pin) == LOW){
       delay(20);
@@ -391,7 +457,9 @@ int bouton_presse(){
   return -1;
 }
 
-void afficherEcran(*char txt1, *char txt2, *char txt3, *char txt4){
+void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
+  lcd.init();
+  lcd.backlight();
   if(txt1){
     lcd.setCursor(0, 0);
     lcd.print(txt1);

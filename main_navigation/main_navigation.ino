@@ -3,9 +3,10 @@
 #include "billy.h"
 #include "pins.h"
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
 const int boutons[] = { BOUTON_HAUT, BOUTON_BAS, BOUTON_CONF, BOUTON_RET };
 const int NB_BOUTONS = 4;
+
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 // -----------------------------------------------------------------------------
 // États du menu
@@ -13,6 +14,9 @@ const int NB_BOUTONS = 4;
 bool    enSousMenu = false;
 uint8_t selMenu    = 0;    // 0..4
 uint8_t selSous    = 0;    // pour Config vitesse et Scenario 1
+
+float vitesse = 0.3;
+float distance = 1;
 
 // -----------------------------------------------------------------------------
 // Définition du menu principal et des sous-menus
@@ -195,11 +199,11 @@ void boutonValider(){
           lcd.print("Supervision...");
           break;
         case 3:
-          scenario_2(v);
+          scenario_2(vitesse);
           lcd.print("Scenario 2...");
           break;
         case 4:
-          scenario_3(v);
+          scenario_3(vitesse);
           lcd.print("Scenario 3...");
           break;
       }
@@ -209,22 +213,22 @@ void boutonValider(){
   else {
     // Validation dans un sous-menu
     if(selMenu == 1){
-      float v = 0.2f + 0.1f * selSous;
+      vitesse = 0.2f + 0.1f * selSous;
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Vitesse: ");
-      lcd.print(v,2);
+      lcd.print(vitesse,2);
       lcd.print(" m/s");
       delay(1000);
     }
     else if(selMenu == 2){
-      float d = 3.0f + 0.25f * selSous * 1000;
-      scenario_1(d, v);
+      distance = 3.0f + 0.25f * selSous * 1000;
+      scenario_1(distance, vitesse);
       lcd.clear();
       lcd.setCursor(0,0);
       lcd.print("Scenario 1:");
       lcd.setCursor(0,1);
-      lcd.print(d,2);
+      lcd.print(distance,2);
       lcd.print(" m en cours");
       delay(1000);
     }
