@@ -38,6 +38,11 @@ double ancienConsigneGauche = 0;
 double consigneDroit = 0;
 double consigneGauche = 0;
 
+double derniereMAJ;
+double tempsMAJ = 3000;
+
+int etatGyro = 0;
+
 // -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------
@@ -87,48 +92,48 @@ float lectureCapteurUltrason(int capteur, int size) {
   return min;
 }
 
-void contournerObstacle() {
+void contournerObstacle(float vit) {
   /*
   arreter(); // Arrêter les moteurs pour éviter les collisions
-  if (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CD) !=0) {
+  if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
-    tournerAngleD(90); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
-      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    tournerAngleD(vit, pi/2); // Tourner à droite pour éviter l'obstacle
+    while (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
+      avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    avancer(SPEED); // Avancer pour reprendre la trajectoire
-    tournerAngleG(90); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CG) != 0) {
-      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    avancer(vit); // Avancer pour reprendre la trajectoire
+    tournerAngleG(vit, pi/2); // Revenir à la trajectoire initiale
+    while (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
+      avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleG(90); // Tourner à gauche pour reprendre la trajectoire
+    tournerAngleG(vit, pi/2); // Tourner à gauche pour reprendre la trajectoire
     while (lectureCapteurLigne() != 0) {
-      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+      avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleD(90); // Revenir à la trajectoire initiale
+    tournerAngleD(vit, pi/2); // Revenir à la trajectoire initiale
   }
-  if (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CG) !=0) {
+  if (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CG, 3) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
-    tournerAngleG(90); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
-      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    tournerAngleG(vit, pi/2); // Tourner à droite pour éviter l'obstacle
+    while (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
+      avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    avancer(SPEED); // Avancer pour reprendre la trajectoire
-    tournerAngleD(90); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CD) != 0) {
-      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+    avancer(vit); // Avancer pour reprendre la trajectoire
+    tournerAngleD(vit, pi/2); // Revenir à la trajectoire initiale
+    while (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
+      avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleD(90); // Tourner à gauche pour reprendre la trajectoire
+    tournerAngleD(vit, pi/2); // Tourner à gauche pour reprendre la trajectoire
     while (lectureCapteurLigne() != 0) {
-      avancer(SPEED); // Avancer pour s'éloigner de l'obstacle
+      avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleG(90); // Revenir à la trajectoire initiale
+    tournerAngleG(vit, pi/2); // Revenir à la trajectoire initiale
   }
   */
 }
@@ -302,15 +307,17 @@ void arreter(){
   consigneGauche = consigneDroit = 0;
 }
 
-void tournerAngleD (float angle) {
+void tournerAngleD (float v, float angle) {
+  float ang = angleTotal + angle;
   while (angleTotal<angle-0.1){
     tournerD(SPEED, 0.75);
   }
   arreter();
 }
 
-void tournerAngleG (float angle) {
-  while (angleTotal>angle+0.1){
+void tournerAngleG (float v, float angle) {
+  float ang = angleTotal - angle;
+  while (angleTotal>ang+0.1){
     tournerG(SPEED, 0.75);
   }
   arreter();
@@ -355,6 +362,11 @@ void interruptionTimer(){
     compteGauche=0;
 
     runPidMoteurs(consigneGauche, consigneDroit);
+
+    if(millis() >= derniereMAJ + tempsMAJ){
+      derniereMAJ = millis();
+      actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD, etatGyro, dist, dureeMission, dureeTotal);
+    }
 }
 
 
@@ -420,10 +432,12 @@ void runPidMoteurs(float cmdG, float cmdD) {
 
 void gyro (int etat){
   if (etat == 1){
+    etatGyro=1;
     digitalWrite(GYROPHARE, HIGH);
   }
   else {
-    digitalWrite(GYROPHARE, HIGH);
+    etatGyro=0;
+    digitalWrite(GYROPHARE, LOW);
   }
 }
 

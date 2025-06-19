@@ -15,7 +15,6 @@ void scenario_2(float consigne_vitesse){
     AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
     
     if (AG == 0 || AD == 0){ // Interruption si obstacle
-      gyro(1);
       contournerObstacle();
     }
   
