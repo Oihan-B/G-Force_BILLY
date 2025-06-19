@@ -203,11 +203,15 @@ void boutonValider(){
           lcd.print("Scenario 2...");
           delay(2000);
           scenario_2(vitesse);
+          lcd.print("Scenario 2: Términé !");
+          delay(2000);
           break;
         case 4:
           lcd.print("Scenario 3...");
           delay(2000);
           scenario_3(vitesse);
+          lcd.print("Scenario 3: Términé !");
+      delay(2000);
           break;
       }
       delay(1000);
@@ -230,10 +234,12 @@ void boutonValider(){
       lcd.setCursor(0,0);
       lcd.print("Scenario 1:");
       lcd.setCursor(0,1);
-      lcd.print(distance,2);
+      lcd.print(distance/1000,2);
       lcd.print(" m en cours");
-      delay(3000);
+      delay(2000);
       scenario_1(distance, vitesse);
+      lcd.print("Scenario 1: Términé !");
+      delay(2000);
     }
     enSousMenu = false;
   }

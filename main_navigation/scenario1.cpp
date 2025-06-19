@@ -3,8 +3,6 @@
 
 void scenario_1(float dist, float consigne_vitesse){
 
-  gyro(1);
-  
   distanceTotal   = 0;
   compteDroit     = 0;
   compteGauche    = 0;
@@ -15,20 +13,31 @@ void scenario_1(float dist, float consigne_vitesse){
   while(distanceAtteinte(dist)==0){
 
     decision = suiviLigne();
+    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
 
-    if (decision == 'A'){
-      avancer(-consigne_vitesse);
-    }
-    else if (decision == 'G'){
-      tournerG(consigne_vitesse, 0.75);
-    }
-    else if (decision == 'D'){
-      tournerD(consigne_vitesse, 0.75);
-    }
-    else{
+    if (AG == 0 || AD == 0){ // Interruption si obstacle
       gyro(1);
       arreter();
-    }   
+    }
+    else{
+      if (decision == 'A'){
+        gyro(0);
+        avancer(-consigne_vitesse);
+      }
+      else if (decision == 'G'){
+        gyro(0);
+        tournerG(consigne_vitesse, 0.75);
+      }
+      else if (decision == 'D'){
+        gyro(0);
+        tournerD(consigne_vitesse, 0.75);
+      }
+      else{
+        gyro(1);
+        arreter();
+      }
+    }
   }
 
   arreter();
