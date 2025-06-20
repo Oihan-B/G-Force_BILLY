@@ -325,11 +325,10 @@ void arreter(){
   consigneGauche = consigneDroit = 0;
 }
 
-/*
 void tournerAngleD (float v, float angle) {
   float ang = angleTotal + angle;
-  while (angleTotal<angle-0.1){
-    tournerD(SPEED, 0.75);
+  while (angleTotal<ang-0.1){
+    tournerD(v, 0.75);
   }
   arreter();
 }
@@ -337,11 +336,10 @@ void tournerAngleD (float v, float angle) {
 void tournerAngleG (float v, float angle) {
   float ang = angleTotal - angle;
   while (angleTotal>ang+0.1){
-    tournerG(SPEED, 0.75);
+    tournerG(v, 0.75);
   }
   arreter();
 }
-*/
 
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie
@@ -572,4 +570,3 @@ void actualiser_site_web(int etatRobot, float vitD, float vitG, float posX, floa
 
   Serial4.write(buf, len);
 }
-
