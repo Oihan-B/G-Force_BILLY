@@ -48,6 +48,8 @@ float dureeMission;
 float debutMission;
 int etatRobot=0;
 
+String rxBuf = "";
+
 
 void debutMission(int s, float t){
   scenario = s;
@@ -510,30 +512,46 @@ void controleManuel(float vit){
   AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
   CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
   CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
-  switch (c) {
-      case 'A': 
+
+  rxBuf += c;
+
+  int idx = rxBuf.indexOf('*');
+  if (idx >= 0 && rxBuf.length() >= idx + 3) {
+    String cmd = rxBuf.substring(idx + 1, idx + 3);
+  }
+  
+  switch (cmd) {
+      case 'AV': 
         if(AG==0 && AD==0){
           avancer(vit);        
         }else{
           arreter();
         }
         break;
-      case 'R': reculer(vit);        break;
-      case 'G': 
+      case 'RE': reculer(vit);        break;
+      case 'TG': 
         if(CG==0){
           tournerG(vit);       
         }else{
           arreter();
         }
         break;
-      case 'D': 
+      case 'TD': 
         if(CD==0){
           tournerD(vit);       
         }else{
           arreter();
         }
         break;
-      case 'S': arreter();           break;
+      case 'ST': arreter();           break;
+      case 'GY': 
+        if(etatGyro){
+          etatGyro=0;
+          gyro(0);
+        }else{
+          etatGyro=1;
+          gyro(1);
+        }
       default:                       break;
     }
 }

@@ -117,4 +117,6 @@ void scenario_1(float dist, float consigne_vitesse);
 void scenario_2(float consigne_vitesse);
 void scenario_3(float consigne_vitesse);
 
+void controleManuel(float vit);
+
 #endif
