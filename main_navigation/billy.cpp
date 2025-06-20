@@ -565,3 +565,10 @@ void actualiser_site_web(int etatRobot, float vitD, float vitG, float posX, floa
   Serial4.write(buf, len);
 }
 
+int confirmationCourrier(){
+  int btn = boutonPresse();
+  while(btn!=3){
+    btn = boutonPresse();
+  }
+  return 1;
+}
