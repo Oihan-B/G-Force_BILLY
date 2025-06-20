@@ -40,7 +40,7 @@ extern double ancienConsigneGauche;
 extern double consigneDroit;
 extern double consigneGauche;
 
-void debutMission(int s, float t);
+void startMission(int s, float t);
 
 // -----------------------------------------------------------------------------
 // Detection Obstacles
@@ -117,6 +117,6 @@ void scenario_1(float dist, float consigne_vitesse);
 void scenario_2(float consigne_vitesse);
 void scenario_3(float consigne_vitesse);
 
-void controleManuel(float vit);
+//void controleManuel(float vit);
 
 #endif

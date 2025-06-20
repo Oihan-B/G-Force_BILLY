@@ -1,6 +1,9 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
+#define RXD2 16
+#define TXD2 17
+
 // Remplacez par vos infos Wi-Fi AP
 const char* ssid     = "BILLY_ESP32";
 const char* password = "Rodolphe64!";
@@ -274,6 +277,7 @@ void handleToggle(){
   }
   controlEnabled = (server.arg("enabled") == "true");
   Serial.print(controlEnabled ? "{\n" : "}\n");
+  Serial2.print(controlEnabled ? "{\n" : "}\n");
   server.send(200, "text/plain", "OK");
 }
 void handleCmd(){
@@ -297,6 +301,7 @@ void handleCmd(){
     return;
   }
   Serial.println(out);
+  Serial2.println(out);
   server.send(200, "text/plain", "OK");
 }
 void handleSpeed(){
@@ -311,6 +316,7 @@ void handleSpeed(){
   String v = server.arg("s");
   String out = "*CV"+v;
   Serial.println(out);
+  Serial2.println(out);
   server.send(200, "text/plain", "OK");
 }
 void handleEvents(){
@@ -330,6 +336,7 @@ void handleEvents(){
 
 void setup(){
   Serial.begin(115200);
+  Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
   delay(1000);
   Serial.println("\n=== Démarrage BILLY ESP32 ===");
   // Mode point d'accès

@@ -2,7 +2,7 @@
 #include "pins.h"
 
 void scenario_2(float consigne_vitesse){
-  debutMission(2, millis());
+  startMission(2, millis());
   
   char decision = suiviLigne();
   float AG;
@@ -16,7 +16,7 @@ void scenario_2(float consigne_vitesse){
     AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
     
     if (AG == 0 || AD == 0){ // Interruption si obstacle
-      contournerObstacle();
+      //contournerObstacle();
     }
   
     else{

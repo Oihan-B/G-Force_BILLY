@@ -85,6 +85,8 @@ void setup(){
   lcd.backlight();
   rafraichirMenu();
 
+  
+
   // inits BILLY
   initMoteurs();
   initEncodeurs();

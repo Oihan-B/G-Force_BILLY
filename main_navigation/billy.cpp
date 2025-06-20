@@ -38,6 +38,11 @@ double ancienConsigneGauche = 0;
 double consigneDroit = 0;
 double consigneGauche = 0;
 
+float AG;
+float AD;
+float CG;
+float CD;
+
 double derniereMAJ;
 double tempsMAJ = 3000;
 
@@ -48,11 +53,11 @@ float dureeMission;
 float debutMission;
 int etatRobot=0;
 
-String rxBuf = "";
+char *rxBuf[10];
 
 
-void debutMission(int s, float t){
-  scenario = s;
+void startMission(int s, float t){
+  etatRobot = s;
   debutMission = t;
 }
 
@@ -387,7 +392,7 @@ void interruptionTimer(){
       CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
       CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
       
-      actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CG, AG, AD, CD, etatGyro, ditsanceTotal, dureeMission, dureeTotal);
+      //actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CG, AG, AD, CD, etatGyro, ditsanceTotal, dureeMission, dureeTotal);
     }
 }
 
@@ -505,9 +510,10 @@ void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
   }
 }
 
-
+/*
 void controleManuel(float vit){
   char c = Serial4.read();
+
   AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
   AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
   CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
@@ -517,34 +523,34 @@ void controleManuel(float vit){
 
   int idx = rxBuf.indexOf('*');
   if (idx >= 0 && rxBuf.length() >= idx + 3) {
-    String cmd = rxBuf.substring(idx + 1, idx + 3);
+    char *cmd[] = rxBuf.substring(idx + 1, idx + 3);
   }
   
   switch (cmd) {
-      case 'AV': 
+      case "AV": 
         if(AG==0 && AD==0){
           avancer(vit);        
         }else{
           arreter();
         }
         break;
-      case 'RE': reculer(vit);        break;
-      case 'TG': 
+      case "RE": reculer(vit);        break;
+      case "TG": 
         if(CG==0){
-          tournerG(vit);       
+          tournerG(vit, 0.75);       
         }else{
           arreter();
         }
         break;
-      case 'TD': 
+      case "TD": 
         if(CD==0){
-          tournerD(vit);       
+          tournerD(vit, 0.75);       
         }else{
           arreter();
         }
         break;
-      case 'ST': arreter();           break;
-      case 'GY': 
+      case "ST": arreter();           break;
+      case "GY": 
         if(etatGyro){
           etatGyro=0;
           gyro(0);
@@ -555,3 +561,4 @@ void controleManuel(float vit){
       default:                       break;
     }
 }
+*/
