@@ -40,6 +40,8 @@ extern double ancienConsigneGauche;
 extern double consigneDroit;
 extern double consigneGauche;
 
+void debutMission(int s, float t);
+
 // -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------

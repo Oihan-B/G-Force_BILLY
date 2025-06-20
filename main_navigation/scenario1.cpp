@@ -2,6 +2,7 @@
 #include "pins.h"
 
 void scenario_1(float dist, float consigne_vitesse){
+  debutMission(1, millis());
 
   distanceTotal   = 0;
   compteDroit     = 0;

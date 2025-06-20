@@ -2,6 +2,7 @@
 #include "pins.h"
 
 void scenario_2(float consigne_vitesse){
+  debutMission(2, millis());
   
   char decision = suiviLigne();
   float AG;

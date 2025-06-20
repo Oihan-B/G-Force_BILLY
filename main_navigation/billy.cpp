@@ -43,6 +43,17 @@ double tempsMAJ = 3000;
 
 int etatGyro = 0;
 
+float dureeTotal;
+float dureeMission;
+float debutMission;
+int etatRobot=0;
+
+
+void debutMission(int s, float t){
+  scenario = s;
+  debutMission = t;
+}
+
 // -----------------------------------------------------------------------------
 // Detection Obstacles
 // -----------------------------------------------------------------------------
@@ -365,7 +376,16 @@ void interruptionTimer(){
 
     if(millis() >= derniereMAJ + tempsMAJ){
       derniereMAJ = millis();
-      actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD, etatGyro, dist, dureeMission, dureeTotal);
+      
+      dureeTotal = millis();
+      dureeMission = millis() - debutMission;
+
+      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
+      CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
+      CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
+      
+      actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CG, AG, AD, CD, etatGyro, ditsanceTotal, dureeMission, dureeTotal);
     }
 }
 
