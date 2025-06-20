@@ -2,7 +2,6 @@
 #ifndef BILLY_H
 #define BILLY_H
 
-
 // -----------------------------------------------------------------------------
 // VARIABLES
 // -----------------------------------------------------------------------------
@@ -117,6 +116,12 @@ void scenario_1(float dist, float consigne_vitesse);
 void scenario_2(float consigne_vitesse);
 void scenario_3(float consigne_vitesse);
 
+// -----------------------------------------------------------------------------
+// SUPERVISION
+// -----------------------------------------------------------------------------
+
 void controleManuel(float vit);
+void actualiser_site_web(int etatRobot, float vitD, float vitG, float posX, float posY, float CAPTEUR_CG, float CAPTEUR_AG, 
+                        float CAPTEUR_AD, float CAPTEUR_CD, int etatGyro, float dist, float dureeMission, float dureeTotal);
 
 #endif

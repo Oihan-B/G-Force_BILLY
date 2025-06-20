@@ -2,7 +2,6 @@
 #include <math.h>
 #include <Arduino.h>
 #include <Wire.h>
-#include <string.h>
 #include <LiquidCrystal_I2C.h>
 #include "billy.h"
 #include "pins.h"
@@ -326,6 +325,7 @@ void arreter(){
   consigneGauche = consigneDroit = 0;
 }
 
+/*
 void tournerAngleD (float v, float angle) {
   float ang = angleTotal + angle;
   while (angleTotal<angle-0.1){
@@ -341,6 +341,7 @@ void tournerAngleG (float v, float angle) {
   }
   arreter();
 }
+*/
 
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie
@@ -369,18 +370,18 @@ void interruptionTimer(){
       theta = dist/ENTRAXE;
     }
     angleTotal+=theta;
+
     /*
     if(angleTotal>pi){
       angleTotal-=2*pi;
     }else if(angleTotal<-pi){
       angleTotal+=2*pi;
     }*/
+
     x+=distMoy*cos(angleTotal);
     y+=distMoy*sin(angleTotal);
     compteDroit=0;
     compteGauche=0;
-
-    Serial.println(vitesseDroit);
     
     runPidMoteurs(consigneGauche, consigneDroit);
 
@@ -395,7 +396,7 @@ void interruptionTimer(){
       CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
       CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
       
-      //actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CG, AG, AD, CD, etatGyro, ditsanceTotal, dureeMission, dureeTotal);
+      actualiser_site_web(etatRobot, vitesseDroit, vitesseGauche, x, y, CG, AG, AD, CD, etatGyro, distanceTotal, dureeMission, dureeTotal);
     }
 }
 
@@ -513,39 +514,54 @@ void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
   }
 }
 
+// -----------------------------------------------------------------------------
+// SUPERVISION
+// -----------------------------------------------------------------------------
+
 void controleManuel(float vit){
-  bool   controlActif = false;
-  char   cmdBuf[3];               // Stocke les 2 caractères d'ordres qui suivent * correspondant à un ordre + \0
-
-  while (Serial4.available()) {
+  while (Serial4.available()){
     char c = Serial4.read();
-
-    if (c == '*') {
-      while (Serial4.available() < 2) {
-        delay(1);
-      }
-      cmdBuf[0] = Serial4.read();
-      cmdBuf[1] = Serial4.read();
-      cmdBuf[2] = '\0';
-
-      if (strcmp(cmdBuf, "AV") == 0) {
-        avancer(vit);
-      }
-      else if (strcmp(cmdBuf, "RE") == 0) {
-        reculer(vit);
-      }
-      else if (strcmp(cmdBuf, "TG") == 0) {
-        tournerG(vit, 0.75);
-      }
-      else if (strcmp(cmdBuf, "TD") == 0) {
-        tournerD(vit, 0.75);
-      }
-      else if (strcmp(cmdBuf, "ST") == 0) {
-        arreter();
-      }
-      else if (strcmp(cmdBuf, "GY") == 0){
-        gyro(!etatGyro);
-      }
+    if (c == 'A') {
+      avancer(vit);
+    }
+    else if (c == 'R') {
+      reculer(vit);
+    }
+    else if (c == 'G') {
+      tournerG(vit, 0.75);
+    }
+    else if (c == 'D') {
+      tournerD(vit, 0.75);
+    }
+    else if (c == 'S') {
+      arreter();
+    }
+    else if (c == 'B'){
+      gyro(!etatGyro);
     }
   }
 }
+
+void actualiser_site_web(int etatRobot, float vitD, float vitG, float posX, float posY, float captCg, float captAg, 
+                        float captAd, float captCd, int   etatGyro, float dist, float dureeMission, float dureeTotal){
+
+  char buf[256];
+  int len = snprintf(buf, sizeof(buf),
+    "$ETATROBOT#%d"
+    "$VITD#%.2f"
+    "$VITG#%.2f"
+    "$POSX#%.2f"
+    "$POSY#%.2f"
+    "$CAPTEUR_CG#%.2f"
+    "$CAPTEUR_AG#%.2f"
+    "$CAPTEUR_AD#%.2f"
+    "$CAPTEUR_CD#%.2f"
+    "$ETATGYRO#%d"
+    "$DIST#%.2f"
+    "$DUREEMISSION#%.2f"
+    "$DUREETOTAL#%.2f\n",
+    etatRobot, vitD, vitG, posX, posY, captCg, captAg, captAd, captCd, etatGyro, dist, dureeMission, dureeTotal);
+
+  Serial4.write(buf, len);
+}
+

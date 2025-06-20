@@ -4,14 +4,84 @@
 #define RXD2 16
 #define TXD2 17
 
-// Remplacez par vos infos Wi-Fi AP
+// === VOTRE AP WI-FI ===
 const char* ssid     = "BILLY_ESP32";
 const char* password = "Rodolphe64!";
+
+// Intervalle d’actualisation du site (en ms)
+const unsigned long actualisationSiteWeb = 4000;
 
 WebServer server(80);
 bool controlEnabled = false;
 
-// Votre page HTML complète en flash
+// === VARIABLES TÉLÉMÉTRIE PARSÉES ===
+int    robotState    = 0;
+float  vitD=0, vitG=0;
+float  posX=0, posY=0;
+float  cap_CG=0, cap_AG=0, cap_AD=0, cap_CD=0;
+int    etatGyro      = 0;
+float  dist=0, dureeMission=0, dureeTotal=0;
+String lastLog       = "";
+
+// Buffer temporaire de lecture série
+String serialBuf;
+
+// =============================================================================
+// === FONCTIONS DE LECTURE & PARSING DU SERIAL 2 (Teensy) ====================
+// =============================================================================
+float getFloat(const String& s, const char* key){
+  int i = s.indexOf(key);
+  if(i<0) return 0;
+  i += strlen(key);
+  int j = s.indexOf('$', i);
+  if(j<0) j = s.length();
+  return s.substring(i,j).toFloat();
+}
+int getInt(const String& s, const char* key){
+  return (int)getFloat(s,key);
+}
+
+// Parse une ligne complète, mise à jour des variables globales
+void parseLine(const String& line) {
+  robotState    = getInt(line, "$ETATROBOT#");
+  vitD          = getFloat(line, "$VITD#");
+  vitG          = getFloat(line, "$VITG#");
+  posX          = getFloat(line, "$POSX#");
+  posY          = getFloat(line, "$POSY#");
+  cap_CG        = getFloat(line, "$CAPTEUR_CG#");
+  cap_AG        = getFloat(line, "$CAPTEUR_AG#");
+  cap_AD        = getFloat(line, "$CAPTEUR_AD#");
+  cap_CD        = getFloat(line, "$CAPTEUR_CD#");
+  etatGyro      = getInt(line, "$ETATGYRO#");
+  dist          = getFloat(line, "$DIST#");
+  dureeMission  = getFloat(line, "$DUREEMISSION#");
+  dureeTotal    = getFloat(line, "$DUREETOTAL#");
+  lastLog       = line;
+}
+
+// À appeler en loop() pour reconstituer les lignes “\n”
+// et appeler parseLine() sans bloquer le serveur
+void pollSerial2() {
+  while (Serial2.available()) {
+    // Permettre au serveur de traiter une éventuelle requête en urgence
+    server.handleClient();
+
+    char c = Serial2.read();
+    if (c == '\n') {
+      parseLine(serialBuf);
+      serialBuf = "";
+    } else {
+      serialBuf += c;
+      // coupe de sécurité
+      if (serialBuf.length() > 300)
+        serialBuf = serialBuf.substring(serialBuf.length() - 300);
+    }
+  }
+}
+
+// =============================================================================
+// === VOTRE PAGE HTML EN PROGMEM (inchangée, j'ai collé le ‹[...]›) =========
+// =============================================================================
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="fr">
@@ -24,6 +94,15 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     .container { display: flex; height: 100vh; }
     .section { flex: 1; padding: 10px; border-left: 1px solid #ddd;
       display: flex; flex-direction: column; align-items: center; }
+    .section {
+    flex: 1;
+    min-width: 0;     
+    padding: 10px;
+    border-left: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    }
     .section:first-child { border-left: none; }
     /* ===== 1. Contrôle BILLY ===== */
     .control { justify-content: center; }
@@ -84,13 +163,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 
     .control .speed-control {
       margin-bottom: 40px;
-    }
-    .control .speed-control input {
-      width: 120px; padding: 8px; font-size: 18px;
-    }
-    .control .speed-control button {
-      padding: 8px 16px; margin-left: 8px;
-      font-size: 18px; cursor: pointer;
+      display: none; /* Hide the speed control section */
     }
 
     /* ===== 2. Supervision BILLY ===== */
@@ -109,7 +182,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       display: flex; justify-content: center; gap: 40px; margin-top: 20px;
     }
     .state .grid-info .col { display: flex; flex-direction: column; }
-    .state .grid-info .line { margin: 4px 0; font-size: 16px; }
+    .state .grid-info .line { margin: 4px 0; font-size: 16px; margin-bottom: 20px; }
 
     /* ===== 3. Journal & Carte ===== */
     .log { justify-content: flex-start; }
@@ -117,10 +190,19 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       margin-bottom: 40px; font-size: 24px; text-align: center;
     }
     .log-box {
-      flex: 1; width: 100%; background: #f5f5f5; color: #333;
-      padding: 10px; font-family: monospace; font-size: 14px;
-      overflow-y: auto; margin-bottom: 10px; border: 1px solid #ccc;
-      white-space: pre-wrap;
+      flex: 1;
+      width: 100%;
+      background: #f5f5f5;
+      color: #333;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      overflow-x: auto;    /* <=== scroll horizontal */
+      overflow-y: auto;    /* <=== scroll vertical */
+      white-space: pre;    /* <=== pas de retour à la ligne automatique */
+      word-wrap: normal;   /* pour être sûr */
+      word-break: normal;  /* pour être sûr */
     }
     canvas {
       border: 1px solid #999; background: #fff; flex: 1;
@@ -142,16 +224,15 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       </div>
       <div class="control-ui">
         <div class="grid">
-          <button class="up"    onclick="cmd('AV')">↑</button>
-          <button class="left"  onclick="cmd('TG')">←</button>
-          <button class="stop"  onclick="cmd('ST')">■</button>
-          <button class="right" onclick="cmd('TD')">→</button>
-          <button class="down"  onclick="cmd('RE')">↓</button>
+          <button class="up"    onclick="cmd('A')">↑</button>
+          <button class="left"  onclick="cmd('G')">←</button>
+          <button class="stop"  onclick="cmd('S')">■</button>
+          <button class="right" onclick="cmd('D')">→</button>
+          <button class="down"  onclick="cmd('R')">↓</button>
         </div>
-        <button class="gyrophare" onclick="cmd('GY')">Gyrophare</button>
+        <button class="gyrophare" onclick="cmd('B')">Gyrophare</button>
         <div class="speed-control">
-          <input type="number" id="speed" placeholder="Vitesse" />
-          <button onclick="setSpeed()">Envoyer</button>
+          <!-- Speed control input and button are hidden -->
         </div>
       </div>
     </div>
@@ -162,7 +243,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
         <div class="cell">Statut : <strong><span id="robot-state">–</span></strong></div>
         <div class="cell">Batterie : <strong><span id="battery">–</span>%</strong></div>
       </div>
-      <img src="billy.png" alt="Robot BILLY">
+      <img src="test.png" alt="Robot BILLY">
       <div class="grid-info">
         <div class="col">
           <div class="line">Cap. Gauche     : <span id="sensor-left">–</span> cm</div>
@@ -248,7 +329,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       ctx.arc(sx,sy,3,0,2*Math.PI);
       ctx.fill();
     }
-    const demoPoints=[{x:1,y:1},{x:9,y:1},{x:9,y:9},{x:1,y:9},{x:1,y:5}];
+    const demoPoints=[{x:1,y:1}];
     function initDemo(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
@@ -260,26 +341,29 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 </body>
 </html>
 )rawliteral";
-
-// Gestion des routes
+// =============================================================================
+// === HANDLERS HTTP EXISTANTS ================================================
+// =============================================================================
 void handleNotFound(){
   Serial.printf("404 %s\n", server.uri().c_str());
   server.send(404, "text/plain", "Not found");
 }
+
 void handleRoot(){
   Serial.println("GET / -> index.html");
   server.send_P(200, "text/html", INDEX_HTML);
 }
+
 void handleToggle(){
   if(!server.hasArg("enabled")){
     server.send(400, "text/plain", "Missing enabled");
     return;
   }
   controlEnabled = (server.arg("enabled") == "true");
-  Serial.print(controlEnabled ? "{\n" : "}\n");
   Serial2.print(controlEnabled ? "{\n" : "}\n");
   server.send(200, "text/plain", "OK");
 }
+
 void handleCmd(){
   if(!server.hasArg("c")){
     server.send(400, "text/plain", "Missing cmd");
@@ -289,21 +373,15 @@ void handleCmd(){
     server.send(403, "text/plain", "Control disabled");
     return;
   }
-  String c = server.arg("c"), out;
-  if      (c=="AV") out="*AV";
-  else if (c=="RE") out="*RE";
-  else if (c=="TG") out="*TG";
-  else if (c=="TD") out="*TD";
-  else if (c=="ST") out="*ST";
-  else if (c=="GY") out="*GY";
-  else {
+  String c = server.arg("c");
+  if (c=="A"||c=="R"||c=="G"||c=="D"||c=="S"||c=="B") {
+    Serial2.println(c);
+    server.send(200, "text/plain", "OK");
+  } else {
     server.send(400, "text/plain", "Unknown cmd");
-    return;
   }
-  Serial.println(out);
-  Serial2.println(out);
-  server.send(200, "text/plain", "OK");
 }
+
 void handleSpeed(){
   if(!server.hasArg("s")){
     server.send(400, "text/plain", "Missing speed");
@@ -313,52 +391,67 @@ void handleSpeed(){
     server.send(403, "text/plain", "Control disabled");
     return;
   }
-  String v = server.arg("s");
+  String v   = server.arg("s");
   String out = "*CV"+v;
-  Serial.println(out);
   Serial2.println(out);
   server.send(200, "text/plain", "OK");
 }
+
 void handleEvents(){
-  // Exemple statique, à adapter si besoin
-  String s = "data: {";
-  s += "\"state\":\"OK\",";
-  s += "\"battery\":100,";
-  s += "\"sensors\":{ \"left\":0,\"frontLeft\":0,\"frontRight\":0,\"right\":0 },";
-  s += "\"motors\":{ \"left\":0,\"right\":0 },";
-  s += "\"distance\":0,";
-  s += "\"duration\":0,";
-  s += "\"pos\":{ \"x\":0,\"y\":0 },";
-  s += "\"log\":\"\"";
-  s += "}\n\n";
+  server.sendHeader("Cache-Control","no-cache");
+  server.sendHeader("Connection","keep-alive");
+
+  String s = String("retry: ") + actualisationSiteWeb + "\n"
+           + "data: {"
+           + "\"state\":"      + String(robotState) + ","
+           + "\"battery\":0,"
+           + "\"sensors\":{"
+             "\"left\":"      + String(cap_CG) + ","
+             "\"frontLeft\":" + String(cap_AG) + ","
+             "\"frontRight\":"+ String(cap_AD) + ","
+             "\"right\":"     + String(cap_CD) +
+            "},"
+           + "\"motors\":{"
+             "\"left\":"      + String(vitG) + ","
+             "\"right\":"     + String(vitD) +
+            "},"
+           + "\"distance\":"  + String(dist) + ","
+           + "\"duration\":"  + String(dureeMission) + ","
+           + "\"pos\":{"
+             "\"x\":"         + String(posX) + ","
+             "\"y\":"         + String(posY) +
+            "},"
+           + "\"gyro\":"     + String(etatGyro) + ","
+           + "\"log\":\""    + lastLog + "\""
+           + "}\n\n";
   server.send(200, "text/event-stream", s);
 }
 
+// =============================================================================
+// === SETUP & LOOP ============================================================
+// =============================================================================
 void setup(){
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
-  delay(1000);
+  delay(500);
+
   Serial.println("\n=== Démarrage BILLY ESP32 ===");
-  // Mode point d'accès
-  WiFi.mode(WIFI_AP);
-  if(WiFi.softAP(ssid, password)){
-    Serial.printf("AP démarré : %s\n", ssid);
-    Serial.print("IP AP     : ");
-    Serial.println(WiFi.softAPIP());
-  } else {
-    Serial.println("Échec softAP !");
-  }
-  // Routes
+  WiFi.softAP(ssid, password);
+  Serial.print("AP IP: "); Serial.println(WiFi.softAPIP());
+
   server.onNotFound(handleNotFound);
-  server.on( "/",              HTTP_GET, handleRoot);
-  server.on( "/toggleControl", HTTP_GET, handleToggle);
-  server.on( "/cmd",           HTTP_GET, handleCmd);
-  server.on( "/setSpeed",      HTTP_GET, handleSpeed);
-  server.on( "/events",        HTTP_GET, handleEvents);
+  server.on("/",             HTTP_GET, handleRoot);
+  server.on("/toggleControl",HTTP_GET, handleToggle);
+  server.on("/cmd",          HTTP_GET, handleCmd);
+  server.on("/setSpeed",     HTTP_GET, handleSpeed);
+  server.on("/events",       HTTP_GET, handleEvents);
   server.begin();
-  Serial.println("HTTP server démarré");
+
+  Serial.println("Serveur HTTP démarré");
 }
 
 void loop(){
+
   server.handleClient();
+  pollSerial2();
 }

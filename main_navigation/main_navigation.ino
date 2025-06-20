@@ -101,17 +101,13 @@ void setup(){
 // Loop principal
 // -----------------------------------------------------------------------------
 void loop(){
-  avancer(0.3);
-  /*
   int b = bouton_presse();
   if(b < 0) return;
 
   if(b == BOUTON_HAUT)   boutonHaut();
   if(b == BOUTON_BAS)    boutonBas();
   if(b == BOUTON_CONF)   boutonValider();
-  if(b == BOUTON_RET)    boutonRetour();
-  */
-  
+  if(b == BOUTON_RET)    boutonRetour(); 
 }
 
 // -----------------------------------------------------------------------------
