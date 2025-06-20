@@ -514,6 +514,14 @@ void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
   }
 }
 
+int confirmationCourrier(){
+  int btn = boutonPresse();
+  while(btn!=3){
+    btn = boutonPresse();
+  }
+  return 1;
+}
+
 // -----------------------------------------------------------------------------
 // SUPERVISION
 // -----------------------------------------------------------------------------
@@ -565,10 +573,3 @@ void actualiser_site_web(int etatRobot, float vitD, float vitG, float posX, floa
   Serial4.write(buf, len);
 }
 
-int confirmationCourrier(){
-  int btn = boutonPresse();
-  while(btn!=3){
-    btn = boutonPresse();
-  }
-  return 1;
-}

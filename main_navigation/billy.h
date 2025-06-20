@@ -107,6 +107,7 @@ void gyro (int etat);
 extern LiquidCrystal_I2C lcd;
 int boutonPresse();
 void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4);
+int confirmationCourrier();
 
 // -----------------------------------------------------------------------------
 // SCENARIOS

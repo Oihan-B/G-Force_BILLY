@@ -246,21 +246,22 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       <img src="test.png" alt="Robot BILLY">
       <div class="grid-info">
         <div class="col">
+          <div class="line">Vitesse Moteur G: <span id="motor-left">–</span> m/s</div>
           <div class="line">Cap. Gauche     : <span id="sensor-left">–</span> cm</div>
           <div class="line">Cap. Av-Gauche  : <span id="sensor-fl">–</span> cm</div>
-          <div class="line">Cap. Av-Droite  : <span id="sensor-fr">–</span> cm</div>
-          <div class="line">Cap. Droite     : <span id="sensor-right">–</span> cm</div>
+          <div class="line">Distance        : <span id="distance">–</span> m</div>
         </div>
         <div class="col">
-          <div class="line">Vitesse Moteur G: <span id="motor-left">–</span> m/s</div>
           <div class="line">Vitesse Moteur D: <span id="motor-right">–</span> m/s</div>
-          <div class="line">Distance        : <span id="distance">–</span> m</div>
+          <div class="line">Cap. Droite     : <span id="sensor-right">–</span> cm</div>
+          <div class="line">Cap. Av-Droite  : <span id="sensor-fr">–</span> cm</div>
           <div class="line">Durée           : <span id="duration">–</span> s</div>
         </div>
       </div>
     </div>
     <!-- SECTION 3 : Journal & Carte -->
     <div class="section log">
+      <br />
       <h2>Logs Billy</h2>
       <div id="log" class="log-box"></div>
       <h2>BILLY Map</h2>

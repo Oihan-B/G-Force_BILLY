@@ -100,6 +100,7 @@ void setup(){
 // -----------------------------------------------------------------------------
 // Loop principal
 // -----------------------------------------------------------------------------
+
 void loop(){
   int b = bouton_presse();
   if(b < 0) return;
@@ -113,6 +114,7 @@ void loop(){
 // -----------------------------------------------------------------------------
 // Lecture d'un bouton (anti-rebond + attente relâchement)
 // -----------------------------------------------------------------------------
+
 int bouton_presse(){
   for(int i = 0; i < NB_BOUTONS; i++){
     int pin = boutons[i];
@@ -200,9 +202,10 @@ void boutonValider(){
       lcd.setCursor(0,0);
       switch(selMenu){
         case 0:
-          actionSupervisionRobot();
           lcd.print("Supervision...");
-          break;
+          while (1) {
+            controleManuel(vitesse);
+          }
         case 3:
           lcd.print("Scenario 2...");
           delay(2000);
