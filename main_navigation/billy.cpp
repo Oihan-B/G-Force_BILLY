@@ -2,6 +2,7 @@
 #include <math.h>
 #include <Arduino.h>
 #include <Wire.h>
+#include <string.h>
 #include <LiquidCrystal_I2C.h>
 #include "billy.h"
 #include "pins.h"
@@ -253,22 +254,22 @@ void initMoteurs() {
 
 void avancerMoteurDroit(int pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
+  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
 }
 
 void avancerMoteurGauche(int pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
 }
 
 void reculerMoteurDroit (int pwm) {
   analogWrite (PWMMOTEURDROIT, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURDROIT, LOW);
+  digitalWrite(DIRECTIONMOTEURDROIT, HIGH);
 }
 
 void reculerMoteurGauche (int pwm) {
   analogWrite (PWMMOTEURGAUCHE, pwm); // Contrôle de vitesse en PWM
-  digitalWrite(DIRECTIONMOTEURGAUCHE, LOW);
+  digitalWrite(DIRECTIONMOTEURGAUCHE, HIGH);
 }
 
 void stopMoteurs() {
@@ -378,6 +379,8 @@ void interruptionTimer(){
     y+=distMoy*sin(angleTotal);
     compteDroit=0;
     compteGauche=0;
+
+    Serial.println(vitesseDroit);
     
     runPidMoteurs(consigneGauche, consigneDroit);
 
@@ -511,52 +514,36 @@ void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
 }
 
 void controleManuel(float vit){
+  bool   controlActif = false;
+  char   cmdBuf[3];               // Stocke les 2 caractères d'ordres qui suivent * correspondant à un ordre + \0
 
-  char cmdBuf[3];    
-
-  int AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-  int AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-  int CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
-  int CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
-
-  if (Serial4.available() > 0) {
+  while (Serial4.available()) {
     char c = Serial4.read();
+
     if (c == '*') {
       while (Serial4.available() < 2) {
         delay(1);
       }
       cmdBuf[0] = Serial4.read();
       cmdBuf[1] = Serial4.read();
-      cmdBuf[2] = '\0';  
+      cmdBuf[2] = '\0';
 
       if (strcmp(cmdBuf, "AV") == 0) {
-        if (AG == 0 && AD == 0) {
-          avancer(vit);
-        } else {
-          arreter();
-        }
+        avancer(vit);
       }
       else if (strcmp(cmdBuf, "RE") == 0) {
         reculer(vit);
       }
       else if (strcmp(cmdBuf, "TG") == 0) {
-        if (CG == 0) {
-          tournerG(vit, 0.75);
-        } else {
-          arreter();
-        }
+        tournerG(vit, 0.75);
       }
       else if (strcmp(cmdBuf, "TD") == 0) {
-        if (CD == 0) {
-          tournerD(vit, 0.75);
-        } else {
-          arreter();
-        }
+        tournerD(vit, 0.75);
       }
       else if (strcmp(cmdBuf, "ST") == 0) {
         arreter();
       }
-      else if (strcmp(cmdBuf, "GY") == 0) {
+      else if (strcmp(cmdBuf, "GY") == 0){
         gyro(!etatGyro);
       }
     }

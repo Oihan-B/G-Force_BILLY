@@ -85,9 +85,8 @@ void setup(){
   lcd.init();
   lcd.backlight();
   rafraichirMenu();
+  Serial.begin(115200);
   Serial4.begin(115200);
-
-  
 
   // inits BILLY
   initMoteurs();
@@ -102,6 +101,8 @@ void setup(){
 // Loop principal
 // -----------------------------------------------------------------------------
 void loop(){
+  avancer(0.3);
+  /*
   int b = bouton_presse();
   if(b < 0) return;
 
@@ -109,6 +110,8 @@ void loop(){
   if(b == BOUTON_BAS)    boutonBas();
   if(b == BOUTON_CONF)   boutonValider();
   if(b == BOUTON_RET)    boutonRetour();
+  */
+  
 }
 
 // -----------------------------------------------------------------------------
