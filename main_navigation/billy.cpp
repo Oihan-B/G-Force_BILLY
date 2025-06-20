@@ -442,11 +442,11 @@ void runPidMoteurs(float cmdG, float cmdD) {
     ancienConsigneDroit = cmdD;
   }
 
-  if (vitesseGauche < cmdG - marge)  pwm_Gauche=pwm_Gauche+3;
-  else if (vitesseGauche > cmdG + marge) pwm_Gauche=pwm_Gauche-3;
+  if (vitesseGauche < cmdG - marge)  pwm_Gauche=pwm_Gauche+5;
+  else if (vitesseGauche > cmdG + marge) pwm_Gauche=pwm_Gauche-5;
 
-  if (vitesseDroit < cmdD - marge)   pwm_Droit=pwm_Droit+3;
-  else if (vitesseDroit > cmdD + marge)   pwm_Droit=pwm_Droit-3;
+  if (vitesseDroit < cmdD - marge)   pwm_Droit=pwm_Droit+5;
+  else if (vitesseDroit > cmdD + marge)   pwm_Droit=pwm_Droit-5;
 
   // bornage
   pwm_Gauche = constrain(pwm_Gauche, -255, 255);
