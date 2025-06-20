@@ -13,7 +13,7 @@ void scenario_1(float dist, float consigne_vitesse){
   float AG;
   float AD;
 
-  bool control = 0;
+  int control = 0;
 
   while(distanceAtteinte(dist)==0){
 
@@ -43,7 +43,7 @@ void scenario_1(float dist, float consigne_vitesse){
       else{
         if (decision == 'A'){
           gyro(0);
-          avancer(-consigne_vitesse);
+          avancer(consigne_vitesse);
         }
         else if (decision == 'G'){
           gyro(0);

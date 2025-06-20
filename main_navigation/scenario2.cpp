@@ -3,6 +3,11 @@
 
 void scenario_2(float consigne_vitesse){
   startMission(2, millis());
+
+  distanceTotal   = 0;
+  compteDroit     = 0;
+  compteGauche    = 0;
+  x = y = theta = 0;
   
   char decision = suiviLigne();
   float AG;
