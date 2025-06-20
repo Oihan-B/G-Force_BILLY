@@ -15,9 +15,9 @@ void scenario_1(float dist, float consigne_vitesse){
 
   int control = 0;
 
-  while(distanceAtteinte(dist) == 0){
+  while(distanceAtteinte(dist)==0){
 
-    if (Serial4.available()) {
+    /*if (Serial4.available()) {
       char c = Serial4.read();
       if(c == '{'){
         control = 1;
@@ -25,17 +25,16 @@ void scenario_1(float dist, float consigne_vitesse){
       else if(c == '}'){
         control = 0;
       }
-    }
+    }*/
 
     if(control){
-      Serial.println("Je lance le controle !");
-      controleManuel(consigne_vitesse);
+      //controleManuel(consigne_vitesse);
     }
     else{
       
       decision = suiviLigne();
-      AG = 0;//lectureCapteurUltrason(CAPTEUR_AG, 3);
-      AD = 0;//lectureCapteurUltrason(CAPTEUR_AD, 3);
+      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
     
       if (AG != 0 || AD != 0){ // Interruption si obstacle
         gyro(1);
