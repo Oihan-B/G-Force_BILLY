@@ -111,6 +111,52 @@ float lectureCapteurUltrason(int capteur, int size) {
 }
 
 void contournerObstacle(float vit) {
+
+  arreter();
+  suivi = suiviLigne();
+
+  if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
+    if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
+      gyro(1);
+      arreter();
+    }
+    while(suivi=='S'){
+      suivi = suiviLigne();
+      CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
+      AD = lectureCapteurUltrason(CAPTEUR_AG, 3)
+      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+      if(AD || AG){
+        arreter();
+      }
+      else if(CG <= 7){
+        tournerD(vit, 0.75);
+      }
+      else if(CG >= 15){
+        tournerG(vit, 0.75);
+      }else{
+        avancer(vit);
+      }
+    }
+  }
+
+  while(suivi == 'S'){
+    suivi = suiviLigne();
+    CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
+    AD = lectureCapteurUltrason(CAPTEUR_AG, 3)
+    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+    if(AD || AG){
+      arreter();
+    }
+    else if(CD <= 7){
+      tournerG(vit, 0.75);
+    }
+    else if(CD >= 15){
+      tournerD(vit, 0.75);
+    }else{
+      avancer(vit);
+    }
+  }
+  
   /*
   arreter(); // Arrêter les moteurs pour éviter les collisions
   if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
