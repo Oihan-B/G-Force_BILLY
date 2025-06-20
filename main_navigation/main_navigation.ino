@@ -81,9 +81,11 @@ void setup(){
   for(int i = 0; i < NB_BOUTONS; i++){
     pinMode(boutons[i], INPUT_PULLUP);
   }
+  
   lcd.init();
   lcd.backlight();
   rafraichirMenu();
+  Serial4.begin(115200);
 
   
 
@@ -93,6 +95,7 @@ void setup(){
   initSuiviLigne();
   initCapteurUltrason();
   pinMode(GYROPHARE, OUTPUT);
+  digitalWrite(GYROPHARE, LOW);
 }
 
 // -----------------------------------------------------------------------------

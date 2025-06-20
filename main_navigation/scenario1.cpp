@@ -3,7 +3,6 @@
 
 void scenario_1(float dist, float consigne_vitesse){
   startMission(1, millis());
-  Serial4.begin(115200);
 
   distanceTotal   = 0;
   compteDroit     = 0;
@@ -18,24 +17,24 @@ void scenario_1(float dist, float consigne_vitesse){
 
   while(distanceAtteinte(dist)==0){
 
-    if (Serial4.available()) {
+    /*if (Serial4.available()) {
       char c = Serial4.read();
-      if(c=="{"){
+      if(c == '{'){
         control = 1;
-      }else if(c=="}"){
+      }
+      else if(c == '}'){
         control = 0;
       }
-    }
+    }*/
 
     if(control){
-      gyro(1);
       //controleManuel(consigne_vitesse);
     }
     else{
-      gyro(0);
+      
       decision = suiviLigne();
-      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
+      AG = 0;//lectureCapteurUltrason(CAPTEUR_AG, 3);
+      AD = 0;//lectureCapteurUltrason(CAPTEUR_AD, 3);
     
       if (AG != 0 || AD != 0){ // Interruption si obstacle
         gyro(1);
@@ -59,6 +58,7 @@ void scenario_1(float dist, float consigne_vitesse){
           arreter();
         }
       }
+      
     }
   }
 

@@ -510,55 +510,55 @@ void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
   }
 }
 
-/*
 void controleManuel(float vit){
-  char c = Serial4.read();
 
-  AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-  AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-  CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
-  CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
+  char cmdBuf[3];    
 
-  rxBuf += c;
+  int AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+  int AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
+  int CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
+  int CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
 
-  int idx = rxBuf.indexOf('*');
-  if (idx >= 0 && rxBuf.length() >= idx + 3) {
-    char *cmd[] = rxBuf.substring(idx + 1, idx + 3);
-  }
-  
-  switch (cmd) {
-      case "AV": 
-        if(AG==0 && AD==0){
-          avancer(vit);        
-        }else{
+  if (Serial4.available() > 0) {
+    char c = Serial4.read();
+    if (c == '*') {
+      while (Serial4.available() < 2) {
+        delay(1);
+      }
+      cmdBuf[0] = Serial4.read();
+      cmdBuf[1] = Serial4.read();
+      cmdBuf[2] = '\0';  
+
+      if (strcmp(cmdBuf, "AV") == 0) {
+        if (AG == 0 && AD == 0) {
+          avancer(vit);
+        } else {
           arreter();
         }
-        break;
-      case "RE": reculer(vit);        break;
-      case "TG": 
-        if(CG==0){
-          tournerG(vit, 0.75);       
-        }else{
+      }
+      else if (strcmp(cmdBuf, "RE") == 0) {
+        reculer(vit);
+      }
+      else if (strcmp(cmdBuf, "TG") == 0) {
+        if (CG == 0) {
+          tournerG(vit, 0.75);
+        } else {
           arreter();
         }
-        break;
-      case "TD": 
-        if(CD==0){
-          tournerD(vit, 0.75);       
-        }else{
+      }
+      else if (strcmp(cmdBuf, "TD") == 0) {
+        if (CD == 0) {
+          tournerD(vit, 0.75);
+        } else {
           arreter();
         }
-        break;
-      case "ST": arreter();           break;
-      case "GY": 
-        if(etatGyro){
-          etatGyro=0;
-          gyro(0);
-        }else{
-          etatGyro=1;
-          gyro(1);
-        }
-      default:                       break;
+      }
+      else if (strcmp(cmdBuf, "ST") == 0) {
+        arreter();
+      }
+      else if (strcmp(cmdBuf, "GY") == 0) {
+        gyro(!etatGyro);
+      }
     }
+  }
 }
-*/
