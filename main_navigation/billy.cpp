@@ -371,7 +371,7 @@ void interruptionTimer(){
     y+=distMoy*sin(angleTotal);
     compteDroit=0;
     compteGauche=0;
-
+    
     runPidMoteurs(consigneGauche, consigneDroit);
 
     if(millis() >= derniereMAJ + tempsMAJ){
@@ -501,4 +501,39 @@ void afficherEcran(char *txt1, char *txt2, char *txt3, char *txt4){
     lcd.setCursor(0, 3);
     lcd.print(txt4);
   }
+}
+
+
+void controleManuel(float vit){
+  char c = Serial4.read();
+  AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+  AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
+  CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
+  CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
+  switch (c) {
+      case 'A': 
+        if(AG==0 && AD==0){
+          avancer(vit);        
+        }else{
+          arreter();
+        }
+        break;
+      case 'R': reculer(vit);        break;
+      case 'G': 
+        if(CG==0){
+          tournerG(vit);       
+        }else{
+          arreter();
+        }
+        break;
+      case 'D': 
+        if(CD==0){
+          tournerD(vit);       
+        }else{
+          arreter();
+        }
+        break;
+      case 'S': arreter();           break;
+      default:                       break;
+    }
 }
