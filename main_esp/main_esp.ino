@@ -1,6 +1,5 @@
 #include <WiFi.h>
 #include <WebServer.h>
-#include <LittleFS.h>
 
 #define RXD2 16
 #define TXD2 17
@@ -10,7 +9,7 @@ const char* ssid     = "BILLY_ESP32";
 const char* password = "Rodolphe64!";
 
 // Intervalle d’actualisation du site (en ms)
-const unsigned long actualisationSiteWeb = 4000;
+const unsigned long actualisationSiteWeb = 1500;
 
 WebServer server(80);
 bool controlEnabled = false;
@@ -30,6 +29,7 @@ String serialBuf;
 // =============================================================================
 // === FONCTIONS DE LECTURE & PARSING DU SERIAL 2 (Teensy) ====================
 // =============================================================================
+
 float getFloat(const String& s, const char* key){
   int i = s.indexOf(key);
   if(i<0) return 0;
@@ -83,6 +83,7 @@ void pollSerial2() {
 // =============================================================================
 // === VOTRE PAGE HTML EN PROGMEM (inchangée, j'ai collé le ‹[...]›) =========
 // =============================================================================
+
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="fr">
@@ -303,104 +304,124 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       <div class="grid-info">
         <div class="col">
           <div class="line">Vitesse Moteur G: <span id="motor-left">–</span> m/s</div>
-          <div class="line">Cap. Gauche     : <span id="sensor-left">–</span> cm</div>
           <div class="line">Cap. Av-Gauche  : <span id="sensor-fl">–</span> cm</div>
+          <div class="line">Cap. Gauche     : <span id="sensor-left">–</span> cm</div>
           <div class="line">Distance        : <span id="distance">–</span> m</div>
         </div>
         <div class="col">
           <div class="line">Vitesse Moteur D: <span id="motor-right">–</span> m/s</div>
+          <div class="line">Cap. Av-Droit  : <span id="sensor-fr">–</span> cm</div>
           <div class="line">Cap. Droite     : <span id="sensor-right">–</span> cm</div>
-          <div class="line">Cap. Av-Droite  : <span id="sensor-fr">–</span> cm</div>
           <div class="line">Durée           : <span id="duration">–</span> s</div>
         </div>
       </div>
     </div>
     <!-- SECTION 3 : Journal & Carte -->
-    <div class="section log">
-      <br />
-      <h2>Logs Billy</h2>
-      <div id="log" class="log-box"></div>
-      <h2>BILLY Map</h2>
-      <canvas id="map" width="300" height="300"></canvas>
-    </div>
+      <div class="section log">
+        <br />
+        <h2>Logs Billy</h2>
+        <div id="log" class="log-box"></div>
+        <h2>BILLY Map</h2>
+        <canvas id="map" width="300" height="300"></canvas>
+      </div>
   </div>
 
   <script>
-    window.addEventListener('load', () => {
-      toggleControl(false);
-      if (window.EventSource) {
-        const es = new EventSource('/events');
-        es.onmessage = e => {
-          const d = JSON.parse(e.data);
-          document.getElementById('robot-state').innerText  = d.state;
-          document.getElementById('battery').innerText      = d.battery;
-          document.getElementById('sensor-left').innerText  = d.sensors.left;
-          document.getElementById('sensor-fl').innerText    = d.sensors.frontLeft;
-          document.getElementById('sensor-fr').innerText    = d.sensors.frontRight;
-          document.getElementById('sensor-right').innerText = d.sensors.right;
-          document.getElementById('motor-left').innerText   = d.motors.left;
-          document.getElementById('motor-right').innerText  = d.motors.right;
-          document.getElementById('distance').innerText     = d.distance;
-          document.getElementById('duration').innerText     = d.duration;
-          appendLog(d.log);
-          plotPoint(d.pos.x, d.pos.y);
-        };
-      }
-      initDemo();
-    });
+  window.addEventListener('load', () => {
+    // 1) Récupère le canevas et son contexte
+    const canvas = document.getElementById('map');
+    const ctx    = canvas.getContext('2d');
+    const SCALE  = 30;    // px par mètre
+    let   traj   = [];    // mémorise les points
 
-    function toggleControl(enabled) {
+    // 2) Initialise la carte : origine au centre + axes
+    function initMap(){
+      ctx.setTransform(1,0,0,1,0,0);                // reset des transforms
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.translate(canvas.width/2, canvas.height/2);  // origine au centre
+      // axes
+      ctx.strokeStyle = '#888';
+      ctx.beginPath();
+        ctx.moveTo(0, -canvas.height/2);
+        ctx.lineTo(0,  canvas.height/2);
+        ctx.moveTo(-canvas.width/2, 0);
+        ctx.lineTo( canvas.width/2, 0);
+      ctx.stroke();
+      // point rouge à l'origine
+      ctx.fillStyle = 'red';
+      ctx.beginPath();
+        ctx.arc(0,0,4,0,2*Math.PI);
+      ctx.fill();
+      traj = [];
+    }
+
+    // 3) Ajoute un point et relie au précédent
+    function addPoint(x,y){
+      const px = x * SCALE;
+      const py = -y * SCALE;  // inversion Y pour le canevas
+      if(traj.length){
+        const p = traj[traj.length-1];
+        ctx.strokeStyle = '#e74c3c';
+        ctx.beginPath();
+          ctx.moveTo(p.px,p.py);
+          ctx.lineTo(px,  py);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#3498db';
+      ctx.beginPath();
+        ctx.arc(px,py,3,0,2*Math.PI);
+      ctx.fill();
+      traj.push({px,py});
+    }
+
+    // 4) Fonctions utilitaires pour les contrôles et le log
+    function toggleControl(enabled){
       fetch(`/toggleControl?enabled=${enabled}`).catch(console.error);
       document.querySelectorAll('.control-ui button, .control-ui input')
               .forEach(el => el.disabled = !enabled);
       document.getElementById('control-label')
               .innerText = enabled ? 'Contrôle activé' : 'Contrôle désactivé';
     }
-    function cmd(c)     { fetch(`/cmd?c=${c}`).catch(console.error); }
-    function setSpeed() {
-      const v = document.getElementById('speed').value;
-      fetch(`/setSpeed?s=${encodeURIComponent(v)}`).catch(console.error);
+    function cmd(c){
+      fetch(`/cmd?c=${c}`).catch(console.error);
     }
-    function appendLog(txt) {
+    function appendLog(txt){
+      if(!txt || txt.charAt(0)==='$') return;
       const l = document.getElementById('log');
       l.innerText += txt + "\n";
       l.scrollTop = l.scrollHeight;
     }
-    const canvas = document.getElementById('map'),
-          ctx    = canvas.getContext('2d');
-    let last = null;
-    function plotPoint(x,y){
-      const sx = x*(canvas.width/10),
-            sy = canvas.height - y*(canvas.height/10);
-      if(last){
-        ctx.beginPath();
-        ctx.moveTo(last.x,last.y);
-        ctx.lineTo(sx,sy);
-        ctx.strokeStyle='#e74c3c';
-        ctx.lineWidth=2;
-        ctx.stroke();
-      }
-      last={x:sx,y:sy};
-      ctx.fillStyle='#3498db';
-      ctx.beginPath();
-      ctx.arc(sx,sy,3,0,2*Math.PI);
-      ctx.fill();
-    }
-    const demoPoints=[{x:1,y:1}];
-    function initDemo(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
-      ctx.strokeRect(0,0,canvas.width,canvas.height);
-      last=null;
-      demoPoints.forEach(p=>plotPoint(p.x,p.y));
-    }
+
+    // 5) Initialisation UI + SSE
+    toggleControl(false);
+    initMap();
+    const es = new EventSource('/events');
+    es.onmessage = evt => {
+      const d = JSON.parse(evt.data);
+      // mise à jour de ton UI existant...
+      document.getElementById('robot-state').innerText  = d.state;
+      document.getElementById('battery').innerText      = d.battery;
+      document.getElementById('motor-left').innerText   = d.motors.left;
+      document.getElementById('motor-right').innerText  = d.motors.right;
+      document.getElementById('sensor-left').innerText  = d.sensors.left;
+      document.getElementById('sensor-fl').innerText    = d.sensors.frontLeft;
+      document.getElementById('sensor-fr').innerText    = d.sensors.frontRight;
+      document.getElementById('sensor-right').innerText = d.sensors.right;
+      document.getElementById('distance').innerText     = d.distance;
+      document.getElementById('duration').innerText     = d.duration;
+      appendLog(d.log);
+      addPoint(d.pos.x, d.pos.y);
+    };
+  });
   </script>
 </body>
 </html>
 )rawliteral";
+
 // =============================================================================
 // === HANDLERS HTTP EXISTANTS ================================================
 // =============================================================================
+
 void handleNotFound(){
   Serial.printf("404 %s\n", server.uri().c_str());
   server.send(404, "text/plain", "Not found");
@@ -487,15 +508,11 @@ void handleEvents(){
 // =============================================================================
 // === SETUP & LOOP ============================================================
 // =============================================================================
+
 void setup(){
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
   delay(500);
-
-  if (!LittleFS.begin()) {
-    Serial.println("Erreur lors du montage de LittleFS");
-    return;
-  }
 
   Serial.println("\n=== Démarrage BILLY ESP32 ===");
   WiFi.softAP(ssid, password);
