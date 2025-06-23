@@ -336,7 +336,7 @@ int contournerObstacle(float vit) {
     while(suivi=='S'){
       suivi = suiviLigne();
       CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
-      AD = lectureCapteurUltrason(CAPTEUR_AG, 3);
+      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
       AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
       if(AD || AG){
         arreter();
@@ -350,12 +350,15 @@ int contournerObstacle(float vit) {
         avancer(vit);
       }
     }
+    tournerD(vit, 0.75);
+    delay(250);
+    return 0;
   }
 
   while(suivi == 'S'){
     suivi = suiviLigne();
     CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AG, 3);
+    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
     AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
     if(AD || AG){
       arreter();
@@ -369,6 +372,8 @@ int contournerObstacle(float vit) {
       avancer(vit);
     }
   }
+  tournerG(vit, 0.75);
+  delay(250);
 
   return 0;
   
