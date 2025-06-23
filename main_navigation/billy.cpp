@@ -145,7 +145,7 @@ void tournerAngleD (float v, float coeff, float angle) {
   float ang = angleTotal - angle;
   tournerD(v, coeff);
   while (angleTotal > ang){
-    continue;
+    yield();
   }
   arreter();
 }
@@ -154,7 +154,7 @@ void tournerAngleG (float v, float coeff, float angle) {
   float ang = angleTotal + angle;
   tournerG(v, coeff);
   while (angleTotal < ang){
-    continue;
+    yield();
   }
   arreter();
 }
@@ -185,7 +185,7 @@ void interruptionTimer(){
       dist = distDroit - distGauche;
       theta = dist / ENTRAXE;
     }
-    angleTotal += theta;
+    angleTotal += theta * 2;
 
     /*
     if(angleTotal>pi){
@@ -438,7 +438,7 @@ void initSuiviLigne(){
 }
 
 char suiviLigne(){ 
-  int capteurs[5] = {S1, S2, S3, S4, S5};
+  int capteurs[5] = {S5, S4, S3, S2, S1};
   int detections[5];
   int i;
 
@@ -446,7 +446,7 @@ char suiviLigne(){
     detections[i] = digitalRead(capteurs[i]); // 0 SOL // 1 LIGNE
   }
 
-  //SI CAPTEUR CASSE => UNIQUEMENT 3 DE GAUCHE QUI FONCTIONNENT
+  /*SI CAPTEUR CASSE => UNIQUEMENT 3 DE GAUCHE QUI FONCTIONNENT
   detections[3] = 1;
   detections[4] = 1;
 
@@ -469,31 +469,29 @@ char suiviLigne(){
   else {
     return 'S';
   }
+  */
 
-  //SI CAPTEUR PAS CASSE
-  /*
-  if (!detections[1] && !detections[2] && !detections[3]) {
+  if (detections[1] && detections[2] && detections[3]) {
     return 'C';
     Serial4.write("J'ai detecté un arrêt, p'tite pause chill !");
   }
 
-  else if (!detections[3] || !detections[4]) {
+  else if (detections[2]) {
+    return 'A';
+  } 
+
+  else if (detections[3] || detections[4]) {
     return 'D';
   } 
 
-  else if (!detections[0] || !detections[1]) {
+  else if (detections[0] || detections[1]) {
     return 'G';
-  } 
-
-  else if (!detections[2]) {
-    return 'A';
   } 
 
   else {
     return 'S';
     Serial4.write("Oups, j'ai perdu la ligne, désolé !");
   }
-  */
 }
 
 // -----------------------------------------------------------------------------

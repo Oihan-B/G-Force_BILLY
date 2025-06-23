@@ -6,12 +6,6 @@ void scenario1(float dist, float consigne_vitesse){
   Serial4.write("Bienvenue dans le scéanrio 1");
   Serial4.write("Je vais essayer de faire de mon mieux !");
 
-  
-  tournerAngleG(consigne_vitesse, 1, pi/2);
-  delay(10000);
-
-  /*
-
   distanceTotal   = 0;
   compteDroit     = 0;
   compteGauche    = 0;
@@ -48,11 +42,11 @@ void scenario1(float dist, float consigne_vitesse){
       }
       else if (decision == 'G'){
         gyro(0);
-        tournerG(consigne_vitesse, 0.7);
+        tournerG(consigne_vitesse, 0.6);
       }
       else if (decision == 'D'){
         gyro(0);
-        tournerD(consigne_vitesse, 0.7);
+        tournerD(consigne_vitesse, 0.6);
       }
       else{
         gyro(1);
@@ -61,5 +55,4 @@ void scenario1(float dist, float consigne_vitesse){
     }
   }
   arreter();
-  */
 }

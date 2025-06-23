@@ -12,7 +12,7 @@ bool    enSousMenu = false;
 uint8_t selMenu    = 0;    // 0..4
 uint8_t selSous    = 0;    // pour Config vitesse et Scenario 1
 
-float vitesse = 0.3;
+float vitesse = 0.25;
 float distance = 1000;
 
 // -----------------------------------------------------------------------------
