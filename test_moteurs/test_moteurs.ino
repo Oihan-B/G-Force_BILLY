@@ -8,6 +8,15 @@
 #define ENCODEURGAUCHEA      28
 #define ENCODEURGAUCHEB      29
 
+
+// CAPTEURS ULTRASONS
+#define CAPTEUR_CG 15
+#define CAPTEUR_CD 27
+#define CAPTEUR_AG 31
+#define CAPTEUR_AD 30
+#define TRIGGER 33
+
+
 #define SPEED   0.3
 #define TURN_SPEED 0.3
 
@@ -50,6 +59,16 @@ void initMoteurs() {
   pinMode(DIRECTIONMOTEURDROIT, OUTPUT);
   pinMode(PWMMOTEURGAUCHE, OUTPUT);
   pinMode(DIRECTIONMOTEURGAUCHE, OUTPUT);
+}
+
+void initCapteurUltrason(){
+  int i;
+  int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
+
+  for (i = 0; i < 4; i++) {
+    pinMode(capteurs_ultrasons[i], INPUT);
+  }
+  pinMode(TRIGGER, OUTPUT);
 }
 
 void avancerMoteurDroit(uint8_t pwm) {
@@ -162,7 +181,8 @@ void setup() {
   Serial.begin(115200);
   initEncodeurs();
   initMoteurs();
-  myTimer.begin(interruptionTimer, TIMERINTERVALE);
+  initCapteurUltrason()
+  //myTimer.begin(interruptionTimer, TIMERINTERVALE);
 }
 
 void loop(){
@@ -175,7 +195,6 @@ void loop(){
     stopMoteurs();
     while(1);  // blocage une fois l’objectif atteint
   }*/
-  if(vitesseDroit){
-    Serial.p
-  }
+  AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+  AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
 }

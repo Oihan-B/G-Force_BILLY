@@ -42,10 +42,12 @@ extern double ancienConsigneGauche;
 extern double consigneDroit;
 extern double consigneGauche;
 
+extern int capteurs_ultrasons[4];
+extern float CG;
 extern float AG;
 extern float AD;
-extern float CG;
 extern float CD;
+
 
 extern float dureeTotal;
 extern float dureeMission;
@@ -94,6 +96,7 @@ void initEncodeurs();                 //Initialise les PINs relatives aux encode
 void interruptionTimer();             //Fonction executée par le timer, calculs d'odométrie, lancement du PID, actualisation du site web...
 void compterDroit();                  //Actualise la distance parcourue par le moteur droit en fontion des retours encodeurs (de combien la roue a tourné)
 void compterGauche();                 //Actualise la distance parcourue par le moteur gauche en fontion des retours encodeurs (de combien la roue a tourné)
+void avancerDist(int vit, float dist);
 int distanceAtteinte(int dist);       //Compare une distance de consigne avec la distance parcourue de réference pour vérifier si un objectif a été atteint
 
 // -----------------------------------------------------------------------------
@@ -107,7 +110,7 @@ void runPidMoteurs(float cmdG, float cmdD);    //Adapte le signal pwm de chaque 
 // -----------------------------------------------------------------------------
 
 void initCapteurUltrason();                                //Initialise les PINs relatives aux capteurs, un TRIGGER commun en OUTPUT et les ECHOs de chaque capteur en INPUT
-float lectureCapteurUltrason(int capteur, int size);       //Renvoie la donnée lu par un capteur si 5 < detection < 40 sinon renvoie 0, on fait size lectures pour et conserve le min pour éviter un éventuel bruit dans la lecture
+void lectureCapteurUltrason();       //Renvoie la donnée lu par un capteur si 5 < detection < 40 sinon renvoie 0, on fait size lectures pour et conserve le min pour éviter un éventuel bruit dans la lecture
 void contournerObstacle(float vit);                                 //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
 
 // -----------------------------------------------------------------------------

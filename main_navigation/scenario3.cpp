@@ -12,8 +12,6 @@ void scenario3(float consigne_vitesse){
   x = y = theta = 0;
 
   char decision = suiviLigne();
-  float AG;
-  float AD;
 
   int checkpoint = 0;
 
@@ -30,8 +28,6 @@ void scenario3(float consigne_vitesse){
     }
 
     decision = suiviLigne();
-    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
   
     if (AG != 0 || AD != 0){ // Interruption si obstacle
       gyro(1);

@@ -5,6 +5,22 @@ void scenario1(float dist, float consigne_vitesse){
   lancerMission(1, millis());
   Serial4.write("Bienvenue dans le scéanrio 1");
   Serial4.write("Je vais essayer de faire de mon mieux !");
+/*
+  while (1) {
+    delay(100);
+    // lecture des quatre capteurs à ultrasons
+
+    // affichage
+    Serial.print("AG : "); Serial.println(AG);
+    Serial.print("AD : "); Serial.println(AD);
+    Serial.print("CG : "); Serial.println(CG);
+    Serial.print("CD : "); Serial.println(CD);
+
+    // optionnel : séparation visuelle
+    Serial.println("----------------");
+  }
+
+  */
 
   distanceTotal   = 0;
   compteDroit     = 0;
@@ -12,8 +28,6 @@ void scenario1(float dist, float consigne_vitesse){
   x = y = theta = 0;
 
   char decision = suiviLigne();
-  float AG;
-  float AD;
 
   while(distanceAtteinte(dist)==0){
 
@@ -28,8 +42,6 @@ void scenario1(float dist, float consigne_vitesse){
     }
 
     decision = suiviLigne();
-    AG = 0;// lectureCapteurUltrason(CAPTEUR_AG, 3);
-    AD = 0; //lectureCapteurUltrason(CAPTEUR_AD, 3);
   
     if (AG != 0 || AD != 0){ // Interruption si obstacle
       gyro(1);
@@ -55,4 +67,6 @@ void scenario1(float dist, float consigne_vitesse){
     }
   }
   arreter();
+
+  
 }

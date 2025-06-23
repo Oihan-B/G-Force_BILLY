@@ -12,8 +12,6 @@ void scenario2(float consigne_vitesse){
   x = y = theta = 0;
   
   char decision = suiviLigne();
-  float AG;
-  float AD;
 
   while (decision != 'C'){
 
@@ -28,11 +26,8 @@ void scenario2(float consigne_vitesse){
     }
 
     decision = suiviLigne();
-
-    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
     
-    if (AG == 0 || AD == 0){ // Interruption si obstacle
+    if (AG != 0 || AD != 0){ // Interruption si obstacle
       contournerObstacle(consigne_vitesse);
     }
   

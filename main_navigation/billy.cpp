@@ -37,10 +37,11 @@ double ancienConsigneGauche = 0;
 double consigneDroit = 0;
 double consigneGauche = 0;
 
-float AG;
-float AD;
-float CG;
-float CD;
+int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
+float CG = 0;
+float AG = 0;
+float AD = 0;
+float CD = 0;
 
 float dureeTotal;
 float dureeMission;
@@ -51,7 +52,7 @@ double tempsLectureUltrason = 500;
 double derniereMAJ = 0;
 double tempsMAJ = 1500;
 
-int etatRobot=0;
+int etatRobot = 0;
 int etatGyro = 0;
 
 // -----------------------------------------------------------------------------
@@ -144,7 +145,7 @@ void arreter(){
 void tournerAngleD (float v, float coeff, float angle) {
   float ang = angleTotal - angle;
   tournerD(v, coeff);
-  while (angleTotal > ang){
+  while (angleTotal > ang + 0.35){
     yield();
   }
   arreter();
@@ -153,7 +154,7 @@ void tournerAngleD (float v, float coeff, float angle) {
 void tournerAngleG (float v, float coeff, float angle) {
   float ang = angleTotal + angle;
   tournerG(v, coeff);
-  while (angleTotal < ang){
+  while (angleTotal < ang - 0.35){
     yield();
   }
   arreter();
@@ -201,16 +202,16 @@ void interruptionTimer(){
     
     runPidMoteurs(consigneGauche, consigneDroit);
 
+    if ((millis() >= derniereLectureUltrason + tempsLectureUltrason) && etatRobot != 0){
+      lectureCapteurUltrason();
+      derniereLectureUltrason = millis();
+    }
+
     if(millis() >= derniereMAJ + tempsMAJ){
       derniereMAJ = millis();
       
       dureeTotal = millis();
       dureeMission = millis() - debutMission;
-
-      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-      CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
-      CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
       
       actualiserSiteWeb(etatRobot, vitesseDroit, vitesseGauche, x, y, CG, AG, AD, CD, etatGyro, distanceTotal, dureeMission, dureeTotal);
     }
@@ -232,6 +233,15 @@ void compterGauche() {
     compteGauche++;
   }
   distGauche = compteGauche * ((pi * D_ROUE) / NB_TIC);
+}
+
+void avancerDist(int vit, float dist){
+  avancer(vit);
+  float d = distanceTotal + dist;
+  while(d>distanceTotal){
+    yield();
+  }
+  arreter();
 }
 
 int distanceAtteinte(int dist){
@@ -276,52 +286,50 @@ void runPidMoteurs(float cmdG, float cmdD) {
 
 void initCapteurUltrason(){
   int i;
-  int capteurs_ultrasons[4] = {CAPTEUR_CG, CAPTEUR_AG, CAPTEUR_AD, CAPTEUR_CD};
 
   for (i = 0; i < 4; i++) {
-    pinMode(capteurs_ultrasons[i], INPUT);
+    pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
   }
   pinMode(TRIGGER, OUTPUT);
 }
 
-float lectureCapteurUltrason(int capteur, int size) {
+void lectureCapteurUltrason() {
 
-  if (millis() >= derniereLectureUltrason + tempsLectureUltrason) {
-    unsigned long duree;
-    float distances_cm[size];
-    int i;
-    float min = 0;
+  unsigned long duree;
+  float detection;
+  int i;
 
-    for (i = 0; i < size; i++){
-        digitalWrite(TRIGGER, LOW);
-        delayMicroseconds(2);
-        digitalWrite(TRIGGER, HIGH);
-        delayMicroseconds(10);
-        digitalWrite(TRIGGER, LOW);
+  for (i = 0; i < 4; i++){
 
-        duree = pulseIn(capteur, HIGH, 30000UL);
+    detection = 0;
 
-        distances_cm[i] = duree * 0.034f / 2.0f;
-        delay(50);
+    digitalWrite(TRIGGER, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIGGER, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIGGER, LOW);
+
+    duree = pulseIn(capteurs_ultrasons[i], HIGH, 30000UL);
+
+    detection = duree * 0.034f / 2.0f;
+
+    delay(10);
+
+    if (detection < 8 || detection > 40){ 
+      detection = 0;
     }
-
-    for (i = 0; i < size; i++){ // On garde la detection minimale parmis x detections pour éviter les perturbations
-      if (i == 0){
-        min = distances_cm[i];
-      }
-      else if (distances_cm[i] < min){
-        min = distances_cm[i];
-      }
+    if (i == 0){
+      CG = detection;
     }
-
-    if (min < 5 || min > 40){ // Si c'est inférieure à 5 cm potentiellement une perturbation donc osef, > 40 aussi osef
-      min = 0;
+    else if (i == 1){
+      AG = detection;
     }
-    derniereLectureUltrason = millis();
-    return min;
-  }
-  else {
-    return 0;
+    else if (i == 2){
+      AD = detection;
+    }
+    else {
+      CD = detection;
+    }
   }
 }
 
@@ -331,17 +339,14 @@ void contournerObstacle(float vit) {
   arreter();
   char suivi = suiviLigne();
 
-  if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
+  if (CG != 0) {
+    if (CD !=0) {
       gyro(1);
       arreter();
       return 1;
     }
     while(suivi=='S'){
       suivi = suiviLigne();
-      CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
-      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
       if(AD || AG){
         arreter();
       }
@@ -361,9 +366,6 @@ void contournerObstacle(float vit) {
 
   while(suivi == 'S'){
     suivi = suiviLigne();
-    CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
     if(AD || AG){
       arreter();
     }
@@ -383,49 +385,60 @@ void contournerObstacle(float vit) {
   */
   
   arreter(); // Arrêter les moteurs pour éviter les collisions
-  avancer(vit);
-  delay(500);
-  if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
+  gyro(1);
+  avancerDist(vit, 100);
+  gyro(0);
+  if (CG != 0) {
+    if (CD !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
     tournerAngleD(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
+    delay(1000);
+    while (CG != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    avancer(vit); // Avancer pour reprendre la trajectoire
+    avancerDist(vit, 500);
     tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
+    delay(1000);
+    while (CG != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
     tournerAngleG(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
-    while (lectureCapteurLigne() != 0) {
+    delay(1000);
+    while (suiviLigne() == 'S') {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
     tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
+    delay(1000);
   }
-  if (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
-    if (lectureCapteurUltrason(CAPTEUR_CG, 3) !=0) {
-      // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
-      gyro(1); // Signalisation du blocage
-    }
+
+
+
     tournerAngleG(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
-    while (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
+    delay(1000);
+    avancerDist(vit, 500);
+    while (CD != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
+      yield();
     }
-    avancer(vit); // Avancer pour reprendre la trajectoire
+    avancerDist(vit, 300);
     tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
-    while (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
+    delay(1000);
+    avancerDist(vit, 500);
+    while (CD != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
+      yield();
     }
     tournerAngleD(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
-    while (lectureCapteurLigne() != 0) {
+    delay(1000);
+    while (suiviLigne() == 'S') {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
+      yield();
     }
     tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
-  }
-  */
+    delay(1000);
+  
 }
 
 // -----------------------------------------------------------------------------
@@ -594,8 +607,6 @@ void controleManuel(float vit){
       if (Serial4.available()){
         c = Serial4.read();
       }
-      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
 
       if (AG != 0 || AD != 0){
         Serial4.write("\nObstacle detectée, interruption automatique du contrôle manuel !");
