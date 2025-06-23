@@ -15,7 +15,7 @@ void scenario2(float consigne_vitesse){
   float AG;
   float AD;
 
-  while (decision != "C"){
+  while (decision != 'C'){
 
     /*
     if (Serial4.available()) {

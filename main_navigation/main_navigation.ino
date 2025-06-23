@@ -39,7 +39,7 @@ const uint8_t tailleSousMenu[NB_MENU] = {
 };
 
 const char* sousMenuVitesse[] = {
-  "  0.15 m/s","  0.20 m/s","  0.25 m/s","  0.30 m/s"
+  "  0.15 m/s","  0.20 m/s","  0.25 m/s","  0.30 m/s",
   "  0.35 m/s","  0.40 m/s","  0.45 m/s","  0.50 m/s"
 };
 const char* sousMenuDistance[] = {

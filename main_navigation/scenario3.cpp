@@ -15,8 +15,6 @@ void scenario3(float consigne_vitesse){
   float AG;
   float AD;
 
-  int control = 0;
-
   int checkpoint = 0;
 
   while(checkpoint<=2){

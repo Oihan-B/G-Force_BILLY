@@ -284,7 +284,7 @@ void initCapteurUltrason(){
 
 float lectureCapteurUltrason(int capteur, int size) {
 
-  if (millis() >= derniereLectureUltrason + tempsLectureUltrason {
+  if (millis() >= derniereLectureUltrason + tempsLectureUltrason) {
     unsigned long duree;
     float distances_cm[size];
     int i;
@@ -325,7 +325,7 @@ float lectureCapteurUltrason(int capteur, int size) {
 
 void contournerObstacle(float vit) {
   arreter();
-  suivi = suiviLigne();
+  char suivi = suiviLigne();
 
   if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
     if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
@@ -335,7 +335,7 @@ void contournerObstacle(float vit) {
     while(suivi=='S'){
       suivi = suiviLigne();
       CG = lectureCapteurUltrason(CAPTEUR_CG, 3);
-      AD = lectureCapteurUltrason(CAPTEUR_AG, 3)
+      AD = lectureCapteurUltrason(CAPTEUR_AG, 3);
       AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
       if(AD || AG){
         arreter();
@@ -354,7 +354,7 @@ void contournerObstacle(float vit) {
   while(suivi == 'S'){
     suivi = suiviLigne();
     CD = lectureCapteurUltrason(CAPTEUR_CD, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AG, 3)
+    AD = lectureCapteurUltrason(CAPTEUR_AG, 3);
     AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
     if(AD || AG){
       arreter();
@@ -521,7 +521,7 @@ int boutonPresse(){
   return -1;
 }
 
-void afficherEcran(int duree, char *txt1, char *txt2, char *txt3, char *txt4){
+void afficherEcran(int duree, const char *txt1, const char *txt2, const char *txt3, const char *txt4){
   Serial4.write("\nActualisation de l'écran LCD :");
   Serial4.write(txt1);
   Serial4.write(txt2);
@@ -545,17 +545,19 @@ void afficherEcran(int duree, char *txt1, char *txt2, char *txt3, char *txt4){
     lcd.setCursor(0, 3);
     lcd.print(txt4);
   }
-  delay(duree);
-  lcd.clear();
+  if (duree != 0){
+    delay(duree);
+    lcd.clear();
+  }
 }
 
 int confirmationCourrier(){
-  afficherEcran("Salut, c'est BILLY !", "Confirme que tu", "as recu ton colis.", "Merci !");
+  afficherEcran(0, "Salut, c'est BILLY !", "Confirme que tu", "as recu ton colis.", "Merci !");
   int btn = boutonPresse();
   while(btn != 3){
     btn = boutonPresse();
   }
-  afficherEcran("Merci a toi !", "Moi j'me barre.", "Ciaoooo LOOSER !");
+  afficherEcran(2000, "Merci a toi !", "Moi j'me barre.", "Ciaoooo LOOSER !", "");
   return 1;
 }
 
@@ -627,7 +629,7 @@ void actualiserSiteWeb(int etatRobot, float vitD, float vitG, float posX, float 
     "$DUREETOTAL#%.2f\n",
     etatRobot, vitD, vitG, posX/1000, posY/1000, 
     captCg, captAg, captAd, captCd, 
-    etatGyro, dist, dureeMission/1000, 
+    etatGyro, dist/1000, dureeMission/1000, 
     dureeTotal);
 
   Serial4.write(buf, len);

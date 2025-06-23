@@ -327,92 +327,79 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
   </div>
 
   <script>
-  window.addEventListener('load', () => {
-    // 1) Récupère le canevas et son contexte
-    const canvas = document.getElementById('map');
-    const ctx    = canvas.getContext('2d');
-    const SCALE  = 30;    // px par mètre
-    let   traj   = [];    // mémorise les points
 
-    // 2) Initialise la carte : origine au centre + axes
-    function initMap(){
-      ctx.setTransform(1,0,0,1,0,0);                // reset des transforms
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.translate(canvas.width/2, canvas.height/2);  // origine au centre
-      // axes
-      ctx.strokeStyle = '#888';
-      ctx.beginPath();
-        ctx.moveTo(0, -canvas.height/2);
-        ctx.lineTo(0,  canvas.height/2);
-        ctx.moveTo(-canvas.width/2, 0);
-        ctx.lineTo( canvas.width/2, 0);
-      ctx.stroke();
-      // point rouge à l'origine
-      ctx.fillStyle = 'red';
-      ctx.beginPath();
-        ctx.arc(0,0,4,0,2*Math.PI);
-      ctx.fill();
-      traj = [];
-    }
-
-    // 3) Ajoute un point et relie au précédent
-    function addPoint(x,y){
-      const px = x * SCALE;
-      const py = -y * SCALE;  // inversion Y pour le canevas
-      if(traj.length){
-        const p = traj[traj.length-1];
-        ctx.strokeStyle = '#e74c3c';
-        ctx.beginPath();
-          ctx.moveTo(p.px,p.py);
-          ctx.lineTo(px,  py);
-        ctx.stroke();
-      }
-      ctx.fillStyle = '#3498db';
-      ctx.beginPath();
-        ctx.arc(px,py,3,0,2*Math.PI);
-      ctx.fill();
-      traj.push({px,py});
-    }
-
-    // 4) Fonctions utilitaires pour les contrôles et le log
-    function toggleControl(enabled){
-      fetch(`/toggleControl?enabled=${enabled}`).catch(console.error);
+    // 0) On déclare d’emblée les fonctions globales
+    window.toggleControl = function(enabled){
+      fetch(`/toggleControl?enabled=${enabled}`)
+        .then(r => {
+          if(!r.ok) console.error("toggleControl failed", r.status);
+        })
+        .catch(console.error);
       document.querySelectorAll('.control-ui button, .control-ui input')
               .forEach(el => el.disabled = !enabled);
       document.getElementById('control-label')
               .innerText = enabled ? 'Contrôle activé' : 'Contrôle désactivé';
-    }
-    function cmd(c){
-      fetch(`/cmd?c=${c}`).catch(console.error);
-    }
-    function appendLog(txt){
-      if(!txt || txt.charAt(0)==='$') return;
-      const l = document.getElementById('log');
-      l.innerText += txt + "\n";
-      l.scrollTop = l.scrollHeight;
-    }
-
-    // 5) Initialisation UI + SSE
-    toggleControl(false);
-    initMap();
-    const es = new EventSource('/events');
-    es.onmessage = evt => {
-      const d = JSON.parse(evt.data);
-      // mise à jour de ton UI existant...
-      document.getElementById('robot-state').innerText  = d.state;
-      document.getElementById('battery').innerText      = d.battery;
-      document.getElementById('motor-left').innerText   = d.motors.left;
-      document.getElementById('motor-right').innerText  = d.motors.right;
-      document.getElementById('sensor-left').innerText  = d.sensors.left;
-      document.getElementById('sensor-fl').innerText    = d.sensors.frontLeft;
-      document.getElementById('sensor-fr').innerText    = d.sensors.frontRight;
-      document.getElementById('sensor-right').innerText = d.sensors.right;
-      document.getElementById('distance').innerText     = d.distance;
-      document.getElementById('duration').innerText     = d.duration;
-      appendLog(d.log);
-      addPoint(d.pos.x, d.pos.y);
     };
-  });
+
+    window.cmd = function(c){
+      fetch(`/cmd?c=${c}`)
+        .then(r => {
+          if(!r.ok) console.error("cmd failed", r.status);
+        })
+        .catch(console.error);
+    };
+
+    window.addEventListener('load', () => {
+      // 1) Récupère le canevas et son contexte
+      const canvas = document.getElementById('map');
+      const ctx    = canvas.getContext('2d');
+      const SCALE  = 25;
+      let   traj   = [];
+
+      // 2) initMap()…
+      function initMap(){
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.translate(canvas.width/2, canvas.height/2);
+        // … trace axes et origine …
+        traj = [];
+      }
+
+      // 3) addPoint()…
+      function addPoint(x,y){
+        const px = x * SCALE, py = -y * SCALE;
+        if(traj.length){
+          const p = traj[traj.length-1];
+          ctx.beginPath();
+          ctx.moveTo(p.px,p.py);
+          ctx.lineTo(px,py);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(px,py,3,0,2*Math.PI);
+        ctx.fill();
+        traj.push({px,py});
+      }
+
+      // 4) appendLog()…
+      function appendLog(txt){
+        if(!txt || txt.charAt(0)==='$') return;
+        const l = document.getElementById('log');
+        l.innerText += txt + "\n";
+        l.scrollTop = l.scrollHeight;
+      }
+
+      // 5) On désactive tout et on lance la carte + SSE
+      toggleControl(false);
+      initMap();
+      const es = new EventSource('/events');
+      es.onmessage = evt => {
+        const d = JSON.parse(evt.data);
+        // MAJ du Dashboard…
+        appendLog(d.log);
+        addPoint(d.pos.x, d.pos.y);
+      };
+    });
   </script>
 </body>
 </html>

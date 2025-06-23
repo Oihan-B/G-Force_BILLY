@@ -15,8 +15,6 @@ void scenario1(float dist, float consigne_vitesse){
   float AG;
   float AD;
 
-  int control = 0;
-
   while(distanceAtteinte(dist)==0){
 
     /*
@@ -56,7 +54,4 @@ void scenario1(float dist, float consigne_vitesse){
       }
     }
   }
-}
-
-  arreter();
 }

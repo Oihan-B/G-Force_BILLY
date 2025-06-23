@@ -108,7 +108,7 @@ void runPidMoteurs(float cmdG, float cmdD);    //Adapte le signal pwm de chaque 
 
 void initCapteurUltrason();                                //Initialise les PINs relatives aux capteurs, un TRIGGER commun en OUTPUT et les ECHOs de chaque capteur en INPUT
 float lectureCapteurUltrason(int capteur, int size);       //Renvoie la donnée lu par un capteur si 5 < detection < 40 sinon renvoie 0, on fait size lectures pour et conserve le min pour éviter un éventuel bruit dans la lecture
-void contournerObstacle();                                 //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
+void contournerObstacle(float vit);                                 //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
 
 // -----------------------------------------------------------------------------
 // Suivi Lignes
@@ -128,10 +128,10 @@ void gyro (int etat);       //Allume (1) ou éteint (0) le gyrophare
 // IHM
 // -----------------------------------------------------------------------------
 
-extern LiquidCrystal_I2C lcd;                                                     //Déclaration de l'écran LCD
-int boutonPresse();                                                               //Fonction qui renvoie -1 si aucun bouton pressé, sinon 0 pour haut, 1 pour bas, 2 pour confirmation et 3 pour retour
-void afficherEcran(int duree, char *txt1, char *txt2, char *txt3, char *txt4);    //Affiche la saisie sur l'écran pendant duree millisecondes, 20 caractères max par lignes (4)
-int confirmationCourrier();                                                       //Confirmation de réeption, met en pause le robot et affiche un texte tant que l'utilisateur ne confirme pas
+extern LiquidCrystal_I2C lcd;                                                                             //Déclaration de l'écran LCD
+int boutonPresse();                                                                                       //Fonction qui renvoie -1 si aucun bouton pressé, sinon 0 pour haut, 1 pour bas, 2 pour confirmation et 3 pour retour
+void afficherEcran(int duree, const char *txt1, const char *txt2, const char *txt3, const char *txt4);    //Affiche la saisie sur l'écran pendant duree millisecondes, 20 caractères max par lignes (4)
+int confirmationCourrier();                                                                               //Confirmation de réeption, met en pause le robot et affiche un texte tant que l'utilisateur ne confirme pas
 
 // -----------------------------------------------------------------------------
 // SCENARIOS
