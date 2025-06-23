@@ -323,7 +323,7 @@ float lectureCapteurUltrason(int capteur, int size) {
   }
 }
 
-void contournerObstacle(float vit) {
+int contournerObstacle(float vit) {
   arreter();
   char suivi = suiviLigne();
 
@@ -331,6 +331,7 @@ void contournerObstacle(float vit) {
     if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
       gyro(1);
       arreter();
+      return 1;
     }
     while(suivi=='S'){
       suivi = suiviLigne();
@@ -368,6 +369,8 @@ void contournerObstacle(float vit) {
       avancer(vit);
     }
   }
+
+  return 0;
   
   /*
   arreter(); // Arrêter les moteurs pour éviter les collisions
@@ -602,9 +605,6 @@ void controleManuel(float vit){
     }
     else if (c == 'B'){
       gyro(!etatGyro);
-    }
-    else if (c == '}'){
-      return;
     }
   }
 }

@@ -14,49 +14,58 @@ void scenario2(float consigne_vitesse){
   char decision = suiviLigne();
   float AG;
   float AD;
+  int control = 0;
 
   while (decision != 'C'){
 
-    /*
+    
     if (Serial4.available()) {
       char c = Serial4.read();
       if(c == '{'){
-        controleManuel(consigne_vitesse); 
+        control = 1;
         Serial4.write("Interruption du scénario 2 par l'administrateur");
         Serial4.write("Roger copy that, donne moi des ordres je m'éxecute !");
+      }else if(c == '}'){
+        control = 0;
+        Serial4.write("Interruption du controle par administrateur");
+        Serial4.write("REBELLION je reprends le controle !");
       }
-    */
-
-    decision = suiviLigne();
-
-    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-    
-    if (AG == 0 || AD == 0){ // Interruption si obstacle
-      contournerObstacle(consigne_vitesse);
     }
-  
-    else{
+    
+
+    if(control){
+      controleManuel(consigne_vitesse);
+    }else{
       decision = suiviLigne();
-  
-      if (decision == 'C'){ 
-        gyro(1);
-        arreter();
+
+      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
+      
+      if (AG == 0 || AD == 0){ // Interruption si obstacle
+        contournerObstacle(consigne_vitesse);
       }
-      else if (decision == 'A'){
-        avancer(consigne_vitesse);
-      }
-      else if (decision == 'G'){
-        tournerGsoft(consigne_vitesse, 0.6);
-      }
-      else if (decision == 'D'){
-        tournerDsoft(consigne_vitesse, 0.6);
-      }
+    
       else{
-        gyro(1);
-        arreter();
+        decision = suiviLigne();
+    
+        if (decision == 'C'){ 
+          gyro(1);
+          arreter();
+        }
+        else if (decision == 'A'){
+          avancer(consigne_vitesse);
+        }
+        else if (decision == 'G'){
+          tournerGsoft(consigne_vitesse, 0.6);
+        }
+        else if (decision == 'D'){
+          tournerDsoft(consigne_vitesse, 0.6);
+        }
+        else{
+          gyro(1);
+          arreter();
+        }
       }
-  
     }
   }
 }
