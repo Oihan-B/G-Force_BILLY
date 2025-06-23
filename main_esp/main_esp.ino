@@ -38,6 +38,7 @@ float getFloat(const String& s, const char* key){
   if(j<0) j = s.length();
   return s.substring(i,j).toFloat();
 }
+
 int getInt(const String& s, const char* key){
   return (int)getFloat(s,key);
 }
@@ -327,13 +328,10 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
   </div>
 
   <script>
-
-    // 0) On déclare d’emblée les fonctions globales
-    window.toggleControl = function(enabled){
+    // ==== 1) FONCTIONS GLOBALES POUR LE CONTRÔLE ====
+    window.toggleControl = function(enabled) {
       fetch(`/toggleControl?enabled=${enabled}`)
-        .then(r => {
-          if(!r.ok) console.error("toggleControl failed", r.status);
-        })
+        .then(r => { if(!r.ok) console.error("toggleControl failed", r.status); })
         .catch(console.error);
       document.querySelectorAll('.control-ui button, .control-ui input')
               .forEach(el => el.disabled = !enabled);
@@ -341,63 +339,107 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
               .innerText = enabled ? 'Contrôle activé' : 'Contrôle désactivé';
     };
 
-    window.cmd = function(c){
+    window.cmd = function(c) {
       fetch(`/cmd?c=${c}`)
-        .then(r => {
-          if(!r.ok) console.error("cmd failed", r.status);
-        })
+        .then(r => { if(!r.ok) console.error("cmd failed", r.status); })
         .catch(console.error);
     };
 
-    window.addEventListener('load', () => {
-      // 1) Récupère le canevas et son contexte
-      const canvas = document.getElementById('map');
-      const ctx    = canvas.getContext('2d');
-      const SCALE  = 25;
-      let   traj   = [];
+    window.setSpeed = function() {
+      const v = document.getElementById('speed').value;
+      fetch(`/setSpeed?s=${encodeURIComponent(v)}`)
+        .catch(console.error);
+    };
 
-      // 2) initMap()…
-      function initMap(){
+    // ==== 2) LOG BOX QUI IGNORE LES LIGNES COMMENÇANT PAR "$" ====
+    window.appendLog = function(txt) {
+      if (!txt || txt.charAt(0) === '$') return;
+      const l = document.getElementById('log');
+      l.innerText += txt + "\n";
+      l.scrollTop = l.scrollHeight;
+    };
+
+    window.addEventListener('load', () => {
+      // ==== 3) INITIALISATION DE LA MAP ====
+      const canvas = document.getElementById('map'),
+            ctx    = canvas.getContext('2d'),
+            SCALE  = 25;            // 25 px = 1 m
+      let traj = [];
+
+      function initMap() {
         ctx.setTransform(1,0,0,1,0,0);
         ctx.clearRect(0,0,canvas.width,canvas.height);
+        // origine au centre
         ctx.translate(canvas.width/2, canvas.height/2);
-        // … trace axes et origine …
+        // axes
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+          ctx.moveTo(0, -canvas.height/2);
+          ctx.lineTo(0,  canvas.height/2);
+          ctx.moveTo(-canvas.width/2, 0);
+          ctx.lineTo( canvas.width/2, 0);
+        ctx.stroke();
+        // point origine
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+          ctx.arc(0,0,4,0,2*Math.PI);
+        ctx.fill();
         traj = [];
       }
 
-      // 3) addPoint()…
-      function addPoint(x,y){
-        const px = x * SCALE, py = -y * SCALE;
-        if(traj.length){
+      function addPoint(x,y) {
+        const px = x * SCALE,
+              py = -y * SCALE;  // y+ vers le haut
+        if (traj.length) {
           const p = traj[traj.length-1];
+          ctx.strokeStyle = '#e74c3c';
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(p.px,p.py);
-          ctx.lineTo(px,py);
+            ctx.moveTo(p.px,p.py);
+            ctx.lineTo(px,py);
           ctx.stroke();
         }
+        ctx.fillStyle = '#3498db';
         ctx.beginPath();
-        ctx.arc(px,py,3,0,2*Math.PI);
+          ctx.arc(px,py,3,0,2*Math.PI);
         ctx.fill();
         traj.push({px,py});
       }
 
-      // 4) appendLog()…
-      function appendLog(txt){
-        if(!txt || txt.charAt(0)==='$') return;
-        const l = document.getElementById('log');
-        l.innerText += txt + "\n";
-        l.scrollTop = l.scrollHeight;
-      }
-
-      // 5) On désactive tout et on lance la carte + SSE
+      // ==== 4) DÉMARRAGE ====
       toggleControl(false);
       initMap();
+
+      // ==== 5) OUVERTURE DU SSE / EventSource ====
+      if (!window.EventSource) {
+        console.error("EventSource not supported");
+        return;
+      }
       const es = new EventSource('/events');
-      es.onmessage = evt => {
-        const d = JSON.parse(evt.data);
-        // MAJ du Dashboard…
+      es.onmessage = e => {
+        const d = JSON.parse(e.data);
+
+        // -- Monitoring --
+        document.getElementById('robot-state').innerText  = d.state;
+        document.getElementById('battery').innerText      = d.battery;
+        document.getElementById('sensor-left').innerText  = d.sensors.left;
+        document.getElementById('sensor-fl').innerText    = d.sensors.frontLeft;
+        document.getElementById('sensor-fr').innerText    = d.sensors.frontRight;
+        document.getElementById('sensor-right').innerText = d.sensors.right;
+        document.getElementById('motor-left').innerText   = d.motors.left;
+        document.getElementById('motor-right').innerText  = d.motors.right;
+        document.getElementById('distance').innerText     = d.distance;
+        document.getElementById('duration').innerText     = d.duration;
+
+        // -- Log & Map --
         appendLog(d.log);
         addPoint(d.pos.x, d.pos.y);
+      };
+
+      es.onerror = err => {
+        console.error("SSE error", err);
+        es.close();
       };
     });
   </script>
