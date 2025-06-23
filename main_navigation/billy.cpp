@@ -25,7 +25,7 @@ volatile double pwm_Droit=0;
 volatile double pwm_Gauche=0;
 volatile double intervalle=0.2;
 volatile double distanceTotal = 0; //mm
-volatile double angleTotal = 0; // radian
+volatile float angleTotal = 0; // radian
 volatile double x = 0; //mm 
 volatile double y = 0; //mm
 volatile double theta = 0; // radian entre -Pi et Pi
@@ -142,17 +142,19 @@ void arreter(){
 }
 
 void tournerAngleD (float v, float coeff, float angle) {
-  float ang = angleTotal + angle;
-  while (angleTotal < ang - 0.1){
-    tournerD(v, coeff);
+  float ang = angleTotal - angle;
+  tournerD(v, coeff);
+  while (angleTotal > ang){
+    continue;
   }
   arreter();
 }
 
 void tournerAngleG (float v, float coeff, float angle) {
-  float ang = angleTotal - angle;
-  while (angleTotal > ang + 0.1){
-    tournerG(v, coeff);
+  float ang = angleTotal + angle;
+  tournerG(v, coeff);
+  while (angleTotal < ang){
+    continue;
   }
   arreter();
 }
@@ -174,16 +176,16 @@ void initEncodeurs() {
 void interruptionTimer(){
   
     //Calcul des vitesses, position et angle du robot  
-    vitesseDroit=((compteDroit*50)/(NB_TIC));
-    vitesseGauche=((compteGauche*50)/(NB_TIC));
+    vitesseDroit = ((50 * compteDroit) / (NB_TIC));
+    vitesseGauche = ((50 * compteGauche) / (NB_TIC));
     
-    distMoy=(distDroit+distGauche)/2;
-    distanceTotal+=distMoy;
+    distMoy = (distDroit+distGauche) / 2;
+    distanceTotal += distMoy;
     if(distDroit>distGauche || distGauche>distDroit){
-      dist=distDroit-distGauche;
-      theta = dist/ENTRAXE;
+      dist = distDroit - distGauche;
+      theta = dist / ENTRAXE;
     }
-    angleTotal+=theta;
+    angleTotal += theta;
 
     /*
     if(angleTotal>pi){
@@ -192,10 +194,10 @@ void interruptionTimer(){
       angleTotal+=2*pi;
     }*/
 
-    x+=distMoy*cos(angleTotal);
-    y+=distMoy*sin(angleTotal);
-    compteDroit=0;
-    compteGauche=0;
+    x += distMoy * cos(angleTotal);
+    y += distMoy * sin(angleTotal);
+    compteDroit = 0;
+    compteGauche = 0;
     
     runPidMoteurs(consigneGauche, consigneDroit);
 
@@ -583,33 +585,40 @@ void lancerMission(int s, float t){
 void controleManuel(float vit){
   while (Serial4.available()){
 
-    AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
-    AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
-
-    if (AG != 0 || AD != 0){
-      Serial4.write("\nObstacle detectée, interruption automatique du contrôle manuel !");
-      gyro(1);
-      return;
-    }
-  
     char c = Serial4.read();
-    if (c == 'A') {
-      avancer(vit);
-    }
-    else if (c == 'R') {
-      reculer(vit);
-    }
-    else if (c == 'G') {
-      tournerG(vit, 0.75);
-    }
-    else if (c == 'D') {
-      tournerD(vit, 0.75);
-    }
-    else if (c == 'S') {
-      arreter();
-    }
-    else if (c == 'B'){
-      gyro(!etatGyro);
+
+    while (c != '}'){
+
+      if (Serial4.available()){
+        c = Serial4.read();
+      }
+      AG = lectureCapteurUltrason(CAPTEUR_AG, 3);
+      AD = lectureCapteurUltrason(CAPTEUR_AD, 3);
+
+      if (AG != 0 || AD != 0){
+        Serial4.write("\nObstacle detectée, interruption automatique du contrôle manuel !");
+        gyro(1);
+        return;
+      }
+  
+      if (c == 'A') {
+        avancer(vit);
+      }
+      else if (c == 'R') {
+        reculer(vit);
+      }
+      else if (c == 'G') {
+        tournerG(vit, 0.75);
+      }
+      else if (c == 'D') {
+        tournerD(vit, 0.75);
+      }
+      else if (c == 'S') {
+        arreter();
+      }
+      else if (c == 'B'){
+        gyro(!etatGyro);
+      }
     }
   }
 }

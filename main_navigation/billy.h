@@ -31,7 +31,7 @@ extern volatile double pwm_Droit;
 extern volatile double pwm_Gauche;
 extern volatile double intervalle;
 extern volatile double distanceTotal;  // mm
-extern volatile double angleTotal;     // radians
+extern volatile float angleTotal;     // radians
 extern volatile double x;              // mm
 extern volatile double y;              // mm
 extern volatile double theta;          // radian 
