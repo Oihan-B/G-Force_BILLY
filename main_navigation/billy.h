@@ -108,7 +108,7 @@ void runPidMoteurs(float cmdG, float cmdD);    //Adapte le signal pwm de chaque 
 
 void initCapteurUltrason();                                //Initialise les PINs relatives aux capteurs, un TRIGGER commun en OUTPUT et les ECHOs de chaque capteur en INPUT
 float lectureCapteurUltrason(int capteur, int size);       //Renvoie la donnée lu par un capteur si 5 < detection < 40 sinon renvoie 0, on fait size lectures pour et conserve le min pour éviter un éventuel bruit dans la lecture
-int contournerObstacle(float vit);                                 //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
+void contournerObstacle(float vit);                                 //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
 
 // -----------------------------------------------------------------------------
 // Suivi Lignes

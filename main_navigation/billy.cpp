@@ -325,7 +325,9 @@ float lectureCapteurUltrason(int capteur, int size) {
   }
 }
 
-int contournerObstacle(float vit) {
+void contournerObstacle(float vit) {
+
+  /*
   arreter();
   char suivi = suiviLigne();
 
@@ -378,48 +380,50 @@ int contournerObstacle(float vit) {
   delay(250);
 
   return 0;
+  */
   
-  /*
   arreter(); // Arrêter les moteurs pour éviter les collisions
+  avancer(vit);
+  delay(500);
   if (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
     if (lectureCapteurUltrason(CAPTEUR_CD, 3) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
-    tournerAngleD(vit, pi/2); // Tourner à droite pour éviter l'obstacle
+    tournerAngleD(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
     while (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
     avancer(vit); // Avancer pour reprendre la trajectoire
-    tournerAngleG(vit, pi/2); // Revenir à la trajectoire initiale
+    tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
     while (lectureCapteurUltrason(CAPTEUR_CG, 3) != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleG(vit, pi/2); // Tourner à gauche pour reprendre la trajectoire
+    tournerAngleG(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
     while (lectureCapteurLigne() != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleD(vit, pi/2); // Revenir à la trajectoire initiale
+    tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
   }
   if (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
     if (lectureCapteurUltrason(CAPTEUR_CG, 3) !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
     }
-    tournerAngleG(vit, pi/2); // Tourner à droite pour éviter l'obstacle
+    tournerAngleG(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
     while (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
     avancer(vit); // Avancer pour reprendre la trajectoire
-    tournerAngleD(vit, pi/2); // Revenir à la trajectoire initiale
+    tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
     while (lectureCapteurUltrason(CAPTEUR_CD, 3) != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleD(vit, pi/2); // Tourner à gauche pour reprendre la trajectoire
+    tournerAngleD(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
     while (lectureCapteurLigne() != 0) {
       avancer(vit); // Avancer pour s'éloigner de l'obstacle
     }
-    tournerAngleG(vit, pi/2); // Revenir à la trajectoire initiale
+    tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
   }
   */
 }
