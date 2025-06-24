@@ -10,6 +10,7 @@ void scenario2(float consigne_vitesse){
   compteDroit     = 0;
   compteGauche    = 0;
   x = y = theta = 0;
+  int obs = 0;
   
   char decision = suiviLigne();
 
@@ -27,8 +28,12 @@ void scenario2(float consigne_vitesse){
 
     decision = suiviLigne();
     
-    if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
-      contournerObstacle(consigne_vitesse);
+    if (((AG != 0 && AG <= 30) || (AD != 0 && AD <= 30)) && obs == 0){ // Interruption si obstacle
+      delay(80);
+      if ((AG != 0 && AG <= 30) || (AD != 0 && AD <= 30)){
+        contournerObstacle(consigne_vitesse);
+        obs = 1;
+      }
     }
   
     else{

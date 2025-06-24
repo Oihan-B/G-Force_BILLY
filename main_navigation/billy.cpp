@@ -58,7 +58,7 @@ float dureeMission;
 float debutMission;
 
 double derniereLectureUltrason = 0;
-double tempsLectureUltrason = 80;
+double tempsLectureUltrason = 50;
 double derniereMAJ = 0;
 double tempsMAJ = 2000;
 
@@ -154,7 +154,7 @@ void arreter(){
 
 void tournerAngleD (float v, float coeff, float angle) {
   v = v - 0.05;
-  float ang = angleTotal - angle * 0.85;
+  float ang = angleTotal - angle * 0.95;
   tournerD(v, coeff);
   while (angleTotal > ang + 0.35){
     yield();
@@ -164,7 +164,7 @@ void tournerAngleD (float v, float coeff, float angle) {
 
 void tournerAngleG (float v, float coeff, float angle) {
   v = v - 0.05;
-  float ang = angleTotal + angle * 0.85;
+  float ang = angleTotal + angle * 0.95;
   tournerG(v, coeff);
   while (angleTotal < ang - 0.35){
     yield();
@@ -591,7 +591,7 @@ void gyro (int etat){
 int boutonPresse(){
   int i;
   int NB_BOUTONS = 4;
-  int boutons[] = { BOUTON_HAUT, BOUTON_BAS, BOUTON_CONF, BOUTON_RET };
+  int boutons[] = {BOUTON_HAUT, BOUTON_BAS, BOUTON_CONF, BOUTON_RET };
   for(i = 0; i < NB_BOUTONS; i++){
     int pin = boutons[i];
     if(digitalRead(pin) == LOW){
@@ -647,8 +647,14 @@ void envoyerLogs(const char *log){
 int confirmationCourrier(){
   afficherEcran(0, "Salut, c'est BILLY !", "Confirme que tu", "as recu ton colis.", "Merci !");
   int btn = boutonPresse();
-  while(btn != 3){
+  float tempsAttente = millis();
+  int aff = 0;
+  while(btn != 7){
     btn = boutonPresse();
+    if((millis() - tempsAttente > 30000) && aff == 0){
+      afficherEcran(0, "AUTODESTRUCTION", "     EN      ", "  COURS !  ", "");
+      aff = 1;
+    }
   }
   afficherEcran(2000, "Merci a toi !", "Moi j'me barre.", "Ciaoooo LOOSER !", "");
   return 1;

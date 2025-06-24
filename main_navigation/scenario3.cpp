@@ -15,23 +15,26 @@ void scenario3(float consigne_vitesse){
 
   int checkpoint = 0;
 
-  while(checkpoint<=2){
+  while(checkpoint <= 2){
 
     if (Serial4.available()) {
       char c = Serial4.read();
       if(c == '{') {
        envoyerLogs("\nInterruption du scénario 2 par l'administrateur");
        envoyerLogs("\nRoger copy that, donne moi des ordres je m'éxecute !");
-        controleManuel(consigne_vitesse);
+       controleManuel(consigne_vitesse);
        envoyerLogs("\nMerci pour le dépannage, je reprend le contrôle !");
       }
     }
 
     decision = suiviLigne();
   
-    if (AG != 0 || AD != 0){ // Interruption si obstacle
-      gyro(1);
-      arreter();
+    if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
+      delay(80);
+      if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){
+        gyro(1);
+        arreter();
+      }
     }
     else{
       if (decision == 'A'){
@@ -49,10 +52,10 @@ void scenario3(float consigne_vitesse){
       else if (decision == 'C'){
         gyro(0);
         arreter();
-        delay(5000);
+        confirmationCourrier();
         checkpoint++;
-        avancer(consigne_vitesse);
-        delay(250);
+        afficherEcran(0, NULL, "Scenario 3 en cours !", NULL, NULL);
+        avancerDist(consigne_vitesse, 50);
       }
       else{
         gyro(1);

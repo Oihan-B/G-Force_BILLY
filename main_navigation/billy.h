@@ -48,7 +48,6 @@ extern float AG;
 extern float AD;
 extern float CD;
 
-
 extern float dureeTotal;
 extern float dureeMission;
 extern float debutMission;

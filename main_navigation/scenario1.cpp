@@ -19,8 +19,8 @@ void scenario1(float dist, float consigne_vitesse){
     // optionnel : séparation visuelle
     Serial.println("----------------");
   }
-
-  */
+*/
+  
   
 
   distanceTotal   = 0;
@@ -45,8 +45,11 @@ void scenario1(float dist, float consigne_vitesse){
     decision = suiviLigne();
   
     if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
-      gyro(1);
-      arreter();
+      delay(80);
+      if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){
+        gyro(1);
+        arreter();
+      }
     }
     else{
       if (decision == 'A'){
@@ -62,7 +65,7 @@ void scenario1(float dist, float consigne_vitesse){
         tournerD(consigne_vitesse, 0.6);
       }
       else if(decision == 'S'){
-        delay(200);
+        delay(500);
         decision = suiviLigne();
         if(decision == 'S'){
           gyro(1);
@@ -75,8 +78,7 @@ void scenario1(float dist, float consigne_vitesse){
       }
     }
   }
-  
   arreter();
-  afficherEcran(10000, "J'ai fini", "les 3 metres" , NULL, NULL);
+  confirmationCourrier();
   
 }
