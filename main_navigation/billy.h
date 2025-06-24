@@ -96,7 +96,7 @@ void initEncodeurs();                 //Initialise les PINs relatives aux encode
 void interruptionTimer();             //Fonction executée par le timer, calculs d'odométrie, lancement du PID, actualisation du site web...
 void compterDroit();                  //Actualise la distance parcourue par le moteur droit en fontion des retours encodeurs (de combien la roue a tourné)
 void compterGauche();                 //Actualise la distance parcourue par le moteur gauche en fontion des retours encodeurs (de combien la roue a tourné)
-void avancerDist(int vit, float dist);
+void avancerDist(float vit, float dist);
 int distanceAtteinte(int dist);       //Compare une distance de consigne avec la distance parcourue de réference pour vérifier si un objectif a été atteint
 
 // -----------------------------------------------------------------------------

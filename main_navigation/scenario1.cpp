@@ -22,12 +22,6 @@ void scenario1(float dist, float consigne_vitesse){
 
   */
   
-   avancerDist(consigne_vitesse, 500);
-   while(1){
-    
-   }
-   
-   /*
 
   distanceTotal   = 0;
   compteDroit     = 0;
@@ -50,7 +44,7 @@ void scenario1(float dist, float consigne_vitesse){
 
     decision = suiviLigne();
   
-    if (AG != 0 || AD != 0){ // Interruption si obstacle
+    if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
       gyro(1);
       arreter();
     }
@@ -67,13 +61,22 @@ void scenario1(float dist, float consigne_vitesse){
         gyro(0);
         tournerD(consigne_vitesse, 0.6);
       }
+      else if(decision == 'S'){
+        delay(200);
+        decision = suiviLigne();
+        if(decision == 'S'){
+          gyro(1);
+          arreter();
+        }
+      }
       else{
         gyro(1);
         arreter();
       }
     }
   }
+  
   arreter();
-
-  */
+  afficherEcran(10000, "J'ai fini", "les 3 metres" , NULL, NULL);
+  
 }

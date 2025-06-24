@@ -48,7 +48,7 @@ float dureeMission;
 float debutMission;
 
 double derniereLectureUltrason = 0;
-double tempsLectureUltrason = 500;
+double tempsLectureUltrason = 150;
 double derniereMAJ = 0;
 double tempsMAJ = 1500;
 
@@ -143,6 +143,7 @@ void arreter(){
 }
 
 void tournerAngleD (float v, float coeff, float angle) {
+  v = v - 0.05;
   float ang = angleTotal - angle;
   tournerD(v, coeff);
   while (angleTotal > ang + 0.35){
@@ -152,6 +153,7 @@ void tournerAngleD (float v, float coeff, float angle) {
 }
 
 void tournerAngleG (float v, float coeff, float angle) {
+  v = v - 0.05;
   float ang = angleTotal + angle;
   tournerG(v, coeff);
   while (angleTotal < ang - 0.35){
@@ -175,7 +177,7 @@ void initEncodeurs() {
 }
 
 void interruptionTimer(){
-  
+
     //Calcul des vitesses, position et angle du robot  
     vitesseDroit = ((50 * compteDroit) / (NB_TIC));
     vitesseGauche = ((50 * compteGauche) / (NB_TIC));
@@ -199,6 +201,7 @@ void interruptionTimer(){
     y += distMoy * sin(angleTotal);
     compteDroit = 0;
     compteGauche = 0;
+    theta = 0;
     
     runPidMoteurs(consigneGauche, consigneDroit);
 
@@ -235,20 +238,17 @@ void compterGauche() {
   distGauche = compteGauche * ((pi * D_ROUE) / NB_TIC);
 }
 
-void avancerDist(int vit, float dist){
-  float d = distanceTotal + dist;
-  gyro(1);
+void avancerDist(float vit, float dist){
+  float d = distanceTotal + (dist*5)/11;
   avancer(vit);
-  while(d>distanceTotal){
-    Serial.println("OOOOO");
+  while(distanceTotal < d){
     yield();
   }
   arreter();
-  gyro(0);
 }
 
 int distanceAtteinte(int dist){
-  if(dist<=distanceTotal){
+  if((dist*5)/11<=distanceTotal){
     return 1;
   }
   return 0;
@@ -318,7 +318,7 @@ void lectureCapteurUltrason() {
 
     delay(10);
 
-    if (detection < 8 || detection > 40){ 
+    if (detection < 8 || detection > 50){ 
       detection = 0;
     }
     if (i == 0){
@@ -388,9 +388,7 @@ void contournerObstacle(float vit) {
   */
   
   arreter(); // Arrêter les moteurs pour éviter les collisions
-  gyro(1);
   avancerDist(vit, 100);
-  gyro(0);
   if (CG != 0) {
     if (CD !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
@@ -421,24 +419,26 @@ void contournerObstacle(float vit) {
     tournerAngleG(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
     delay(1000);
     avancerDist(vit, 500);
+    avancer(vit); // Avancer pour s'éloigner de l'obstacle
     while (CD != 0) {
-      avancer(vit); // Avancer pour s'éloigner de l'obstacle
       yield();
     }
-    avancerDist(vit, 300);
+    //avancerDist(vit, 100);
     tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
     delay(1000);
     avancerDist(vit, 500);
+    avancer(vit); // Avancer pour s'éloigner de l'obstacle
     while (CD != 0) {
-      avancer(vit); // Avancer pour s'éloigner de l'obstacle
       yield();
     }
+    avancerDist(vit, 350);
     tournerAngleD(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
     delay(1000);
+    avancer(vit); // Avancer pour s'éloigner de l'obstacle
     while (suiviLigne() == 'S') {
-      avancer(vit); // Avancer pour s'éloigner de l'obstacle
       yield();
     }
+    avancerDist(vit, 50);
     tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
     delay(1000);
   
