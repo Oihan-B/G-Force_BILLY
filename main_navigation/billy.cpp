@@ -556,9 +556,10 @@ void afficherEcran(int duree, const char *txt1, const char *txt2, const char *tx
 }
 
 void envoyerLogs(const char *log){
-  envoyerLogs(log);
-  Serial4.flush(); 
+  Serial4.write(log);
+  Serial4.write("\n");
   delayMicroseconds(50);
+  Serial4.flush();
 }
 
 int confirmationCourrier(){
@@ -595,8 +596,9 @@ void controleManuel(float vit){
 
       if (AG != 0 || AD != 0){
         envoyerLogs("\nObstacle detectée, interruption automatique du contrôle manuel !");
+        arreter();
         gyro(1);
-        return;
+        break;
       }
   
       if (c == 'A') {
@@ -617,7 +619,10 @@ void controleManuel(float vit){
       else if (c == 'B'){
         gyro(!etatGyro);
       }
+      Serial4.flush(); 
+      yield();
     }
+    break;
   }
 }
 
