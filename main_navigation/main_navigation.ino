@@ -153,6 +153,8 @@ void boutonValider(){
       switch(selMenu){
         case 0:
           lcd.print("Supervision...");
+          envoyerLogs("\nTEST");
+          lancerMission(4, millis());
           while (1) {
             controleManuel(vitesse);
           }

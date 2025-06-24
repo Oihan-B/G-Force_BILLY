@@ -3,8 +3,8 @@
 
 void scenario1(float dist, float consigne_vitesse){
   lancerMission(1, millis());
-  Serial4.write("Bienvenue dans le scéanrio 1");
-  Serial4.write("Je vais essayer de faire de mon mieux !");
+  envoyerLogs("\nBienvenue dans le scéanrio 1");
+  envoyerLogs("\nJe vais essayer de faire de mon mieux !");
 /*
   while (1) {
     delay(100);
@@ -35,10 +35,10 @@ void scenario1(float dist, float consigne_vitesse){
     if (Serial4.available()) {
       char c = Serial4.read();
       if(c == '{') {
-        Serial4.write("Interruption du scénario 2 par l'administrateur");
-        Serial4.write("Roger copy that, donne moi des ordres je m'éxecute !");
+        envoyerLogs("\nInterruption du scénario 2 par l'administrateur");
+        envoyerLogs("\nRoger copy that, donne moi des ordres je m'éxecute !");
         controleManuel(consigne_vitesse);
-        Serial4.write("Merci pour le dépannage, je reprend le contrôle !");
+        envoyerLogs("\nMerci pour le dépannage, je reprend le contrôle !");
       }
     }
 

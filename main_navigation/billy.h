@@ -92,12 +92,12 @@ void tournerAngleG (float v, float coeff, float angle);       //Fait pivoter le 
 // Fonctions Odometrie
 // -----------------------------------------------------------------------------
 
-void initEncodeurs();                 //Initialise les PINs relatives aux encodeurs, A et B avec un attachInterrupt pour faire appel aux fonctions compterDroit / compterGauche à chaque variation
-void interruptionTimer();             //Fonction executée par le timer, calculs d'odométrie, lancement du PID, actualisation du site web...
-void compterDroit();                  //Actualise la distance parcourue par le moteur droit en fontion des retours encodeurs (de combien la roue a tourné)
-void compterGauche();                 //Actualise la distance parcourue par le moteur gauche en fontion des retours encodeurs (de combien la roue a tourné)
-void avancerDist(float vit, float dist);
-int distanceAtteinte(int dist);       //Compare une distance de consigne avec la distance parcourue de réference pour vérifier si un objectif a été atteint
+void initEncodeurs();                       //Initialise les PINs relatives aux encodeurs, A et B avec un attachInterrupt pour faire appel aux fonctions compterDroit / compterGauche à chaque variation
+void interruptionTimer();                   //Fonction executée par le timer, calculs d'odométrie, lancement du PID, actualisation du site web...
+void compterDroit();                        //Actualise la distance parcourue par le moteur droit en fontion des retours encodeurs (de combien la roue a tourné)
+void compterGauche();                       //Actualise la distance parcourue par le moteur gauche en fontion des retours encodeurs (de combien la roue a tourné)
+void avancerDist(float vit, float dist);    //Fonction bloquante qui avance en boucle dans que la distance de consigne n'est pas atteinte
+int distanceAtteinte(int dist);             //Compare une distance de consigne avec la distance parcourue de réference pour vérifier si un objectif a été atteint
 
 // -----------------------------------------------------------------------------
 // PID
@@ -135,6 +135,7 @@ extern LiquidCrystal_I2C lcd;                                                   
 int boutonPresse();                                                                                       //Fonction qui renvoie -1 si aucun bouton pressé, sinon 0 pour haut, 1 pour bas, 2 pour confirmation et 3 pour retour
 void afficherEcran(int duree, const char *txt1, const char *txt2, const char *txt3, const char *txt4);    //Affiche la saisie sur l'écran pendant duree millisecondes, 20 caractères max par lignes (4)
 int confirmationCourrier();                                                                               //Confirmation de réeption, met en pause le robot et affiche un texte tant que l'utilisateur ne confirme pas
+void envoyerLogs(const char *log);                                                                        //Envoie à l'ESP32 qui gère le site web un message de log pour qu'il s'affiche sur le site web
 
 // -----------------------------------------------------------------------------
 // SCENARIOS

@@ -332,7 +332,6 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
         <canvas id="map" width="300" height="300"></canvas>
       </div>
   </div>
-
   <script>
     // ==== 1) FONCTIONS GLOBALES POUR LE CONTRÔLE ====
     window.toggleControl = function(enabled) {
@@ -365,90 +364,92 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       l.scrollTop = l.scrollHeight;
     };
 
-    window.addEventListener('load', () => {
-      // ==== 3) INITIALISATION DE LA MAP ====
-      const canvas = document.getElementById('map'),
-            ctx    = canvas.getContext('2d'),
-            SCALE  = 25;            // 25 px = 1 m
-      let traj = [];
+    // ==== 3) INITIALISATION DE LA MAP ====
+    const canvas = document.getElementById('map'),
+          ctx    = canvas.getContext('2d'),
+          SCALE  = 25;  // 25 px = 1 m
+    let traj = [];
 
-      function initMap() {
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        // origine au centre
-        ctx.translate(canvas.width/2, canvas.height/2);
-        // axes
-        ctx.strokeStyle = '#888';
-        ctx.lineWidth = 1;
+    function initMap() {
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.translate(canvas.width/2, canvas.height/2);
+      // dessine axes
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+        ctx.moveTo(0, -canvas.height/2);
+        ctx.lineTo(0,  canvas.height/2);
+        ctx.moveTo(-canvas.width/2, 0);
+        ctx.lineTo( canvas.width/2, 0);
+      ctx.stroke();
+      // origine
+      ctx.fillStyle = 'red';
+      ctx.beginPath();
+        ctx.arc(0,0,4,0,2*Math.PI);
+      ctx.fill();
+      traj = [];
+    }
+
+    function addPoint(x,y) {
+      const px = x * SCALE,
+            py = -y * SCALE;  // y+ vers le haut
+      if (traj.length) {
+        const p = traj[traj.length-1];
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-          ctx.moveTo(0, -canvas.height/2);
-          ctx.lineTo(0,  canvas.height/2);
-          ctx.moveTo(-canvas.width/2, 0);
-          ctx.lineTo( canvas.width/2, 0);
+          ctx.moveTo(p.px,p.py);
+          ctx.lineTo(px,py);
         ctx.stroke();
-        // point origine
-        ctx.fillStyle = 'red';
-        ctx.beginPath();
-          ctx.arc(0,0,4,0,2*Math.PI);
-        ctx.fill();
-        traj = [];
       }
+      ctx.fillStyle = '#3498db';
+      ctx.beginPath();
+        ctx.arc(px,py,3,0,2*Math.PI);
+      ctx.fill();
+      traj.push({px,py});
+    }
 
-      function addPoint(x,y) {
-        const px = x * SCALE,
-              py = -y * SCALE;  // y+ vers le haut
-        if (traj.length) {
-          const p = traj[traj.length-1];
-          ctx.strokeStyle = '#e74c3c';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-            ctx.moveTo(p.px,p.py);
-            ctx.lineTo(px,py);
-          ctx.stroke();
-        }
-        ctx.fillStyle = '#3498db';
-        ctx.beginPath();
-          ctx.arc(px,py,3,0,2*Math.PI);
-        ctx.fill();
-        traj.push({px,py});
-      }
+    // ==== 4) POLLING JSON À /telemetry toutes les 2 s ====
+    let prevLog = "";
 
-      // ==== 4) DÉMARRAGE ====
+    function refreshTelemetry(){
+      fetch('/telemetry')
+        .then(r => r.json())
+        .then(d => {
+          // -- Monitoring --
+          document.getElementById('robot-state').innerText  = d.state;
+          document.getElementById('battery').innerText      = d.battery;
+          document.getElementById('sensor-left').innerText  = d.sensors.left;
+          document.getElementById('sensor-fl').innerText    = d.sensors.frontLeft;
+          document.getElementById('sensor-fr').innerText    = d.sensors.frontRight;
+          document.getElementById('sensor-right').innerText = d.sensors.right;
+          document.getElementById('motor-left').innerText   = d.motors.left;
+          document.getElementById('motor-right').innerText  = d.motors.right;
+          document.getElementById('distance').innerText     = d.distance;
+          document.getElementById('duration').innerText     = d.duration;
+
+          // -- Log (seulement si différent ET ne commence pas par '$') --
+          if (d.log && d.log !== prevLog && d.log.charAt(0) !== '$') {
+            appendLog(d.log);
+          }
+          prevLog = d.log;
+
+          // -- Map --
+          addPoint(d.pos.x, d.pos.y);
+        })
+        .catch(console.error);
+    }
+
+    // ==== 5) DÉMARRAGE AU LOAD ====
+    window.addEventListener('load', () => {
       toggleControl(false);
       initMap();
-
-      // ==== 5) OUVERTURE DU SSE / EventSource ====
-      if (!window.EventSource) {
-        console.error("EventSource not supported");
-        return;
-      }
-      const es = new EventSource('/events');
-      es.onmessage = e => {
-        const d = JSON.parse(e.data);
-
-        // -- Monitoring --
-        document.getElementById('robot-state').innerText  = d.state;
-        document.getElementById('battery').innerText      = d.battery;
-        document.getElementById('sensor-left').innerText  = d.sensors.left;
-        document.getElementById('sensor-fl').innerText    = d.sensors.frontLeft;
-        document.getElementById('sensor-fr').innerText    = d.sensors.frontRight;
-        document.getElementById('sensor-right').innerText = d.sensors.right;
-        document.getElementById('motor-left').innerText   = d.motors.left;
-        document.getElementById('motor-right').innerText  = d.motors.right;
-        document.getElementById('distance').innerText     = d.distance;
-        document.getElementById('duration').innerText     = d.duration;
-
-        // -- Log & Map --
-        appendLog(d.log);
-        addPoint(d.pos.x, d.pos.y);
-      };
-
-      es.onerror = err => {
-        console.error("SSE error", err);
-        es.close();
-      };
+      refreshTelemetry();              // 1ère fois tout de suite
+      setInterval(refreshTelemetry, 2000); // puis toutes les 2 s
     });
   </script>
+
 </body>
 </html>
 )rawliteral";
@@ -456,6 +457,18 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 // =============================================================================
 // === HANDLERS HTTP EXISTANTS ================================================
 // =============================================================================
+
+void handleEvents(){
+  server.sendHeader("Cache-Control","no-cache");
+  server.sendHeader("Connection","keep-alive");
+
+  String s = String("retry: ") + actualisationSiteWeb + "\n"
+           + "data: {"
+           + /* … tout votre JSON… */
+           + "\"log\":\""    + lastLog + "\""
+           + "}\n\n";
+  server.send(200, "text/event-stream", s);
+}
 
 void handleNotFound(){
   Serial.printf("404 %s\n", server.uri().c_str());
@@ -510,34 +523,31 @@ void handleSpeed(){
   server.send(200, "text/plain", "OK");
 }
 
-void handleEvents(){
-  server.sendHeader("Cache-Control","no-cache");
-  server.sendHeader("Connection","keep-alive");
-
-  String s = String("retry: ") + actualisationSiteWeb + "\n"
-           + "data: {"
-           + "\"state\":"      + String(robotState) + ","
-           + "\"battery\":0,"
-           + "\"sensors\":{"
-             "\"left\":"      + String(cap_CG) + ","
-             "\"frontLeft\":" + String(cap_AG) + ","
-             "\"frontRight\":"+ String(cap_AD) + ","
-             "\"right\":"     + String(cap_CD) +
-            "},"
-           + "\"motors\":{"
-             "\"left\":"      + String(vitG) + ","
-             "\"right\":"     + String(vitD) +
-            "},"
-           + "\"distance\":"  + String(dist) + ","
-           + "\"duration\":"  + String(dureeMission) + ","
-           + "\"pos\":{"
-             "\"x\":"         + String(posX) + ","
-             "\"y\":"         + String(posY) +
-            "},"
-           + "\"gyro\":"     + String(etatGyro) + ","
-           + "\"log\":\""    + lastLog + "\""
-           + "}\n\n";
-  server.send(200, "text/event-stream", s);
+void handleTelemetry(){
+  // On renvoie simplement un JSON au client
+  String s = String("{")
+    + "\"state\":"      + robotState
+    + ",\"battery\":0"
+    + ",\"sensors\":{"
+      "\"left\":"      + String(cap_CG)
+      + ",\"frontLeft\":" + String(cap_AG)
+      + ",\"frontRight\":" + String(cap_AD)
+      + ",\"right\":"     + String(cap_CD)
+    + "}"
+    + ",\"motors\":{"
+      "\"left\":"      + String(vitG)
+      + ",\"right\":"     + String(vitD)
+    + "}"
+    + ",\"distance\":"  + String(dist)
+    + ",\"duration\":"  + String(dureeMission)
+    + ",\"pos\":{"
+      "\"x\":"         + String(posX)
+      + ",\"y\":"         + String(posY)
+    + "}"
+    + ",\"gyro\":"     + String(etatGyro)
+    + ",\"log\":\""    + lastLog + "\""
+    + "}";
+  server.send(200, "application/json", s);
 }
 
 // =============================================================================
@@ -546,7 +556,10 @@ void handleEvents(){
 
 void setup(){
   Serial.begin(115200);
+  Serial2.setRxBufferSize(512);
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
+  serialBuf.reserve(256);
+  lastLog.reserve(128);
   delay(500);
 
   Serial.println("\n=== Démarrage BILLY ESP32 ===");
@@ -558,14 +571,14 @@ void setup(){
   server.on("/toggleControl",HTTP_GET, handleToggle);
   server.on("/cmd",          HTTP_GET, handleCmd);
   server.on("/setSpeed",     HTTP_GET, handleSpeed);
-  server.on("/events",       HTTP_GET, handleEvents);
-  server.begin();
+  // la seule route JSON dont on a besoin :
+  server.on("/telemetry",    HTTP_GET, handleTelemetry);
 
+  server.begin();
   Serial.println("Serveur HTTP démarré");
 }
 
 void loop(){
-
-  server.handleClient();
   pollSerial2();
+  server.handleClient();
 }

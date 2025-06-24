@@ -466,7 +466,7 @@ char suiviLigne(){
 
   if (detections[1] && detections[2] && detections[3]) {
     return 'C';
-    Serial4.write("J'ai detecté un arrêt, p'tite pause chill !");
+    envoyerLogs("\nJ'ai detecté un arrêt, p'tite pause chill !");
   }
 
   else if (detections[2]) {
@@ -483,7 +483,7 @@ char suiviLigne(){
 
   else {
     return 'S';
-    Serial4.write("Oups, j'ai perdu la ligne, désolé !");
+    envoyerLogs("\nOups, j'ai perdu la ligne, désolé !");
   }
 }
 
@@ -523,11 +523,14 @@ int boutonPresse(){
 }
 
 void afficherEcran(int duree, const char *txt1, const char *txt2, const char *txt3, const char *txt4){
-  Serial4.write("\nActualisation de l'écran LCD :");
-  Serial4.write(txt1);
-  Serial4.write(txt2);
-  Serial4.write(txt3);
-  Serial4.write(txt4);
+  envoyerLogs("\nActualisation de l'écran LCD :");
+  envoyerLogs(txt1);
+  envoyerLogs("\n");
+  envoyerLogs(txt2);
+  envoyerLogs("\n");
+  envoyerLogs(txt3);
+  envoyerLogs("\n");
+  envoyerLogs(txt4);
 
   lcd.clear();
   if(txt1){
@@ -552,6 +555,12 @@ void afficherEcran(int duree, const char *txt1, const char *txt2, const char *tx
   }
 }
 
+void envoyerLogs(const char *log){
+  envoyerLogs(log);
+  Serial4.flush(); 
+  delayMicroseconds(50);
+}
+
 int confirmationCourrier(){
   afficherEcran(0, "Salut, c'est BILLY !", "Confirme que tu", "as recu ton colis.", "Merci !");
   int btn = boutonPresse();
@@ -563,8 +572,8 @@ int confirmationCourrier(){
 }
 
 void lancerMission(int s, float t){
-  Serial4.write("\nLancement d'une nouvelle mission !");
-  Serial4.write("\nStatut du robot et durée mission mises à jour.");
+  envoyerLogs("\nLancement d'une nouvelle mission !");
+  envoyerLogs("\nStatut du robot et durée mission mises à jour.");
   etatRobot = s;
   debutMission = t;
 }
@@ -585,7 +594,7 @@ void controleManuel(float vit){
       }
 
       if (AG != 0 || AD != 0){
-        Serial4.write("\nObstacle detectée, interruption automatique du contrôle manuel !");
+        envoyerLogs("\nObstacle detectée, interruption automatique du contrôle manuel !");
         gyro(1);
         return;
       }
@@ -617,7 +626,7 @@ void actualiserSiteWeb(int etatRobot, float vitD, float vitG, float posX, float 
 
   char buf[256];
   int len = snprintf(buf, sizeof(buf),
-    "$ETATROBOT#%d"
+    "\n$ETATROBOT#%d"
     "$VITD#%.2f"
     "$VITG#%.2f"
     "$POSX#%.2f"
