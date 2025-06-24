@@ -236,8 +236,8 @@ void compterGauche() {
 }
 
 void avancerDist(int vit, float dist){
-  avancer(vit);
   float d = distanceTotal + dist;
+  avancer(vit);
   while(d>distanceTotal){
     yield();
   }

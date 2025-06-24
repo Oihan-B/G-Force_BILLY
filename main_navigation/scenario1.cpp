@@ -21,6 +21,10 @@ void scenario1(float dist, float consigne_vitesse){
   }
 
   */
+  
+   avancerDist(consigne_vitesse, 500);
+   
+   /*
 
   distanceTotal   = 0;
   compteDroit     = 0;
@@ -68,5 +72,5 @@ void scenario1(float dist, float consigne_vitesse){
   }
   arreter();
 
-  
+  */
 }
