@@ -237,11 +237,14 @@ void compterGauche() {
 
 void avancerDist(int vit, float dist){
   float d = distanceTotal + dist;
+  gyro(1);
   avancer(vit);
   while(d>distanceTotal){
+    Serial.println("OOOOO");
     yield();
   }
   arreter();
+  gyro(0);
 }
 
 int distanceAtteinte(int dist){

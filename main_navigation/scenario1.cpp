@@ -23,6 +23,9 @@ void scenario1(float dist, float consigne_vitesse){
   */
   
    avancerDist(consigne_vitesse, 500);
+   while(1){
+    
+   }
    
    /*
 
