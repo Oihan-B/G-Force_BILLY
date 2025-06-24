@@ -48,9 +48,9 @@ float dureeMission;
 float debutMission;
 
 double derniereLectureUltrason = 0;
-double tempsLectureUltrason = 150;
+double tempsLectureUltrason = 500;
 double derniereMAJ = 0;
-double tempsMAJ = 1500;
+double tempsMAJ = 2000;
 
 int etatRobot = 0;
 int etatGyro = 0;
@@ -414,8 +414,6 @@ void contournerObstacle(float vit) {
     delay(1000);
   }
 
-
-
     tournerAngleG(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
     delay(1000);
     avancerDist(vit, 500);
@@ -465,31 +463,6 @@ char suiviLigne(){
   for (i = 0; i < 5; i++){
     detections[i] = digitalRead(capteurs[i]); // 0 SOL // 1 LIGNE
   }
-
-  /*SI CAPTEUR CASSE => UNIQUEMENT 3 DE GAUCHE QUI FONCTIONNENT
-  detections[3] = 1;
-  detections[4] = 1;
-
-  if (!detections[0] && !detections[1] && !detections[2]) {
-    return 'C';
-  }
-
-  else if (!detections[2]) {
-    return 'D';
-  } 
-
-  else if (!detections[0]) {
-    return 'G';
-  } 
-
-  else if (!detections[1]) {
-    return 'A';
-  }
-
-  else {
-    return 'S';
-  }
-  */
 
   if (detections[1] && detections[2] && detections[3]) {
     return 'C';
