@@ -43,12 +43,22 @@ float AG = 0;
 float AD = 0;
 float CD = 0;
 
+volatile float echoStartCG = 0;
+volatile float echoStartAG = 0;
+volatile float echoStartAD = 0;
+volatile float echoStartCD = 0;
+
+volatile float startCG = 0;
+volatile float startAG = 0;
+volatile float startAD = 0;
+volatile float startCD = 0;
+
 float dureeTotal;
 float dureeMission;
 float debutMission;
 
 double derniereLectureUltrason = 0;
-double tempsLectureUltrason = 500;
+double tempsLectureUltrason = 80;
 double derniereMAJ = 0;
 double tempsMAJ = 2000;
 
@@ -144,7 +154,7 @@ void arreter(){
 
 void tournerAngleD (float v, float coeff, float angle) {
   v = v - 0.05;
-  float ang = angleTotal - angle;
+  float ang = angleTotal - angle * 0.85;
   tournerD(v, coeff);
   while (angleTotal > ang + 0.35){
     yield();
@@ -154,7 +164,7 @@ void tournerAngleD (float v, float coeff, float angle) {
 
 void tournerAngleG (float v, float coeff, float angle) {
   v = v - 0.05;
-  float ang = angleTotal + angle;
+  float ang = angleTotal + angle * 0.85;
   tournerG(v, coeff);
   while (angleTotal < ang - 0.35){
     yield();
@@ -206,7 +216,11 @@ void interruptionTimer(){
     runPidMoteurs(consigneGauche, consigneDroit);
 
     if ((millis() >= derniereLectureUltrason + tempsLectureUltrason) && etatRobot != 0){
-      lectureCapteurUltrason();
+      digitalWrite(TRIGGER, LOW);
+      delayMicroseconds(2);
+      digitalWrite(TRIGGER, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIGGER, LOW);
       derniereLectureUltrason = millis();
     }
 
@@ -294,6 +308,74 @@ void initCapteurUltrason(){
     pinMode(capteurs_ultrasons[i], INPUT_PULLUP);
   }
   pinMode(TRIGGER, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(CAPTEUR_CG), lectureUSCG, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CAPTEUR_AG), lectureUSAG, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CAPTEUR_AD), lectureUSAD, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CAPTEUR_CD), lectureUSCD, CHANGE);
+}
+
+void lectureUSCG(){
+  if(digitalRead(CAPTEUR_CG) == HIGH){
+    echoStartCG = micros();
+    startCG = 1;
+  }else{
+    if(startCG){
+      unsigned long dureeCG = micros() - echoStartCG;
+      CG = dureeCG * 0.034f / 2.0f;
+      if (CG < 8 || CG > 50){ 
+        CG = 0;
+      }
+      startCG = 0;
+    }
+  }
+}
+
+void lectureUSAG(){
+  if(digitalRead(CAPTEUR_AG) == HIGH){
+    echoStartAG = micros();
+    startAG = 1;
+  }else{
+    if(startAG){
+      unsigned long dureeAG = micros() - echoStartAG;
+      AG = dureeAG * 0.034f / 2.0f;
+      if (AG < 8 || AG > 50){ 
+        AG = 0;
+      }
+      startAG = 0;
+    }
+  }
+}
+
+void lectureUSAD(){
+  if(digitalRead(CAPTEUR_AD) == HIGH){
+    echoStartAD = micros();
+    startAD = 1;
+  }else{
+    if(startAG){
+      unsigned long dureeAD = micros() - echoStartAD;
+      AD = dureeAD * 0.034f / 2.0f;
+      if (AD < 8 || AD > 50){ 
+        AD = 0;
+      }
+      startAD = 0;
+    }
+  }
+}
+
+void lectureUSCD(){
+  if(digitalRead(CAPTEUR_CD) == HIGH){
+    echoStartCD = micros();
+    startCD = 1;
+  }else{
+    if(startCD){
+      unsigned long dureeCD = micros() - echoStartCD;
+      CD = dureeCD * 0.034f / 2.0f;
+      if (CD < 8 || CD > 50){ 
+        CD = 0;
+      }
+      startCD = 0;
+    }
+  }
 }
 
 void lectureCapteurUltrason() {

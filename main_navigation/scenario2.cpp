@@ -27,7 +27,7 @@ void scenario2(float consigne_vitesse){
 
     decision = suiviLigne();
     
-    if (AG != 0 || AD != 0){ // Interruption si obstacle
+    if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
       contournerObstacle(consigne_vitesse);
     }
   
