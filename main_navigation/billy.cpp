@@ -65,6 +65,8 @@ double tempsMAJ = 2000;
 int etatRobot = 0;
 int etatGyro = 0;
 
+char buf[32];
+
 // -----------------------------------------------------------------------------
 // Commandes Moteurs
 // -----------------------------------------------------------------------------
@@ -262,7 +264,7 @@ void avancerDist(float vit, float dist){
 }
 
 int distanceAtteinte(int dist){
-  if((dist*5)/11<=distanceTotal){
+  if((dist)/2<=distanceTotal){
     return 1;
   }
   return 0;
@@ -471,7 +473,7 @@ void contournerObstacle(float vit) {
   
   arreter(); // Arrêter les moteurs pour éviter les collisions
   avancerDist(vit, 100);
-  if (CG != 0) {
+  /*if (CG != 0) {
     if (CD !=0) {
       // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
       gyro(1); // Signalisation du blocage
@@ -494,7 +496,7 @@ void contournerObstacle(float vit) {
     }
     tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
     delay(1000);
-  }
+  }*/
 
     tournerAngleG(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
     delay(1000);
@@ -511,7 +513,7 @@ void contournerObstacle(float vit) {
     while (CD != 0) {
       yield();
     }
-    avancerDist(vit, 350);
+    avancerDist(vit, 250);
     tournerAngleD(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
     delay(1000);
     avancer(vit); // Avancer pour s'éloigner de l'obstacle
@@ -651,8 +653,8 @@ int confirmationCourrier(){
   int aff = 0;
   while(btn != 7){
     btn = boutonPresse();
-    if((millis() - tempsAttente > 30000) && aff == 0){
-      afficherEcran(0, "AUTODESTRUCTION", "     EN      ", "  COURS !  ", "");
+    if((millis() - tempsAttente > 60000) && aff == 0){
+      afficherEcran(0, "AUTODESTRUCTION", "EN", "COURS !  ", "3, 2, 1 ...");
       aff = 1;
     }
   }

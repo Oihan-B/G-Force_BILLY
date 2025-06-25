@@ -30,10 +30,11 @@ void scenario3(float consigne_vitesse){
     decision = suiviLigne();
   
     if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
-      delay(80);
+      delay(100);
       if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){
-        gyro(1);
         arreter();
+        gyro(1);
+        afficherEcran(2000, "Oups, j'ai rencontre", NULL, "un obstacle", NULL);
       }
     }
     else{
@@ -54,8 +55,20 @@ void scenario3(float consigne_vitesse){
         arreter();
         confirmationCourrier();
         checkpoint++;
-        afficherEcran(0, NULL, "Scenario 3 en cours !", NULL, NULL);
-        avancerDist(consigne_vitesse, 50);
+        snprintf(buf, sizeof(buf), "Checkpoint %d/3", checkpoint);
+        afficherEcran(2000, "Scenario 3 ...", NULL, buf, NULL);
+        if(checkpoint!=2){
+          avancerDist(consigne_vitesse, 75);
+        }
+      }
+      else if(decision == 'S'){
+        delay(500);
+        decision = suiviLigne();
+        if(decision == 'S'){
+          gyro(1);
+          arreter();
+          afficherEcran(2000, "Oups, j'ai perdu", NULL, "la ligne", NULL);
+        }
       }
       else{
         gyro(1);

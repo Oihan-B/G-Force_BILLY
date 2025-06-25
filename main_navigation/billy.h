@@ -1,4 +1,5 @@
 #include <LiquidCrystal_I2C.h>
+#include <stdio.h>
 #ifndef BILLY_H
 #define BILLY_H
 
@@ -59,6 +60,8 @@ extern double tempsMAJ;
 
 extern int etatRobot;
 extern int etatGyro;
+
+extern char buf[32];
 
 
 // -----------------------------------------------------------------------------

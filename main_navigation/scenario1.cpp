@@ -5,24 +5,7 @@ void scenario1(float dist, float consigne_vitesse){
   lancerMission(1, millis());
   envoyerLogs("\nBienvenue dans le scéanrio 1");
   envoyerLogs("\nJe vais essayer de faire de mon mieux !");
-/*
-  while (1) {
-    delay(100);
-    // lecture des quatre capteurs à ultrasons
-
-    // affichage
-    Serial.print("AG : "); Serial.println(AG);
-    Serial.print("AD : "); Serial.println(AD);
-    Serial.print("CG : "); Serial.println(CG);
-    Serial.print("CD : "); Serial.println(CD);
-
-    // optionnel : séparation visuelle
-    Serial.println("----------------");
-  }
-*/
   
-  
-
   distanceTotal   = 0;
   compteDroit     = 0;
   compteGauche    = 0;
@@ -45,13 +28,15 @@ void scenario1(float dist, float consigne_vitesse){
     decision = suiviLigne();
   
     if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){ // Interruption si obstacle
-      delay(80);
+      delay(100);
       if ((AG != 0 && AG <= 40) || (AD != 0 && AD <= 40)){
-        gyro(1);
         arreter();
+        gyro(1);
+        afficherEcran(2000, "Oups, j'ai rencontre", NULL, "un obstacle", NULL);
       }
     }
     else{
+      afficherEcran(0, "Scénario 1", NULL, NULL, NULL);
       if (decision == 'A'){
         gyro(0);
         avancer(consigne_vitesse);
@@ -70,6 +55,7 @@ void scenario1(float dist, float consigne_vitesse){
         if(decision == 'S'){
           gyro(1);
           arreter();
+          afficherEcran(2000, "Oups, j'ai perdu", NULL, "la ligne", NULL);
         }
       }
       else{
@@ -79,6 +65,9 @@ void scenario1(float dist, float consigne_vitesse){
     }
   }
   arreter();
+  float dist_m = dist/1000.0;
+  snprintf(buf, sizeof(buf), "distance de %fm", dist_m);
+  afficherEcran(2000, "C'est bon,", "j'ai atteint la", buf, "Bravo a moi !");
   confirmationCourrier();
-  
+  afficherEcran(2000, "Scenario 1", NULL, "terminee", NULL);
 }

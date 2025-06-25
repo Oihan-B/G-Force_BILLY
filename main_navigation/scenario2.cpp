@@ -31,7 +31,12 @@ void scenario2(float consigne_vitesse){
     if (((AG != 0 && AG <= 30) || (AD != 0 && AD <= 30)) && obs == 0){ // Interruption si obstacle
       delay(80);
       if ((AG != 0 && AG <= 30) || (AD != 0 && AD <= 30)){
+        gyro(1);
+        afficherEcran(0, "Bon, je vais", "essayer de", "contourner l'obstacle", "A + dans l'bus");
         contournerObstacle(consigne_vitesse);
+        gyro(0);
+        afficherEcran(2000, "Je suppose que", NULL, "j'ai reussi", NULL);
+        afficherEcran(0, "Scenario 2...", NULL, NULL, NULL);
         obs = 1;
       }
     }
@@ -42,6 +47,8 @@ void scenario2(float consigne_vitesse){
       if (decision == 'C'){ 
         gyro(1);
         arreter();
+        confirmationCourrier();
+        afficherEcran(2000, "Scenario 3", NULL, "terminee", NULL);
       }
       else if (decision == 'A'){
         avancer(consigne_vitesse);
@@ -51,6 +58,15 @@ void scenario2(float consigne_vitesse){
       }
       else if (decision == 'D'){
         tournerDsoft(consigne_vitesse, 0.6);
+      }
+      else if(decision == 'S'){
+        delay(500);
+        decision = suiviLigne();
+        if(decision == 'S'){
+          gyro(1);
+          arreter();
+          afficherEcran(2000, "Oups, j'ai perdu", NULL, "la ligne", NULL);
+        }
       }
       else{
         gyro(1);
