@@ -4,17 +4,14 @@
 #define RXD2 16
 #define TXD2 17
 
-// === VOTRE AP WI-FI ===
 const char* ssid     = "BILLY_ESP32";
 const char* password = "Rodolphe64!";
 
-// Intervalle d’actualisation du site (en ms)
 const unsigned long actualisationSiteWeb = 2000;
 
 WebServer server(80);
 bool controlEnabled = false;
 
-// === VARIABLES TÉLÉMÉTRIE PARSÉES ===
 int    robotState    = 0;
 float  vitD=0, vitG=0;
 float  posX=0, posY=0;
@@ -23,12 +20,14 @@ int    etatGyro      = 0;
 float  dist=0, dureeMission=0, dureeTotal=0;
 String lastLog       = "";
 
-// Buffer temporaire de lecture série
+// Buffer temporaire pour lecture série
 String serialBuf;
 
+
 // =============================================================================
-// === FONCTIONS DE LECTURE & PARSING DU SERIAL 2 (Teensy) ====================
+// FONCTIONS  LECTURE & PARSING SERIAL 
 // =============================================================================
+
 
 float getFloat(const String& s, const char* key){
   int i = s.indexOf(key);
@@ -44,6 +43,7 @@ int getInt(const String& s, const char* key){
 }
 
 // Parse une ligne complète, mise à jour des variables globales
+
 void parseLine(const String& line) {
   robotState    = getInt(line, "$ETATROBOT#");
   vitD          = getFloat(line, "$VITD#");
@@ -61,11 +61,8 @@ void parseLine(const String& line) {
   lastLog       = line;
 }
 
-// À appeler en loop() pour reconstituer les lignes “\n”
-// et appeler parseLine() sans bloquer le serveur
 void pollSerial2() {
   while (Serial2.available()) {
-    // Permettre au serveur de traiter une éventuelle requête en urgence
     server.handleClient();
 
     char c = Serial2.read();
@@ -74,7 +71,6 @@ void pollSerial2() {
       serialBuf = "";
     } else {
       serialBuf += c;
-      // coupe de sécurité
       if (serialBuf.length() > 300)
         serialBuf = serialBuf.substring(serialBuf.length() - 300);
     }
@@ -82,7 +78,7 @@ void pollSerial2() {
 }
 
 // =============================================================================
-// === VOTRE PAGE HTML EN PROGMEM (inchangée, j'ai collé le ‹[...]›) =========
+// PAGE HTML EN PROGMEM 
 // =============================================================================
 
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
@@ -333,7 +329,9 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       </div>
   </div>
   <script>
+
     // ==== 1) FONCTIONS GLOBALES POUR LE CONTRÔLE ====
+
     window.toggleControl = function(enabled) {
       fetch(`/toggleControl?enabled=${enabled}`)
         .then(r => { if(!r.ok) console.error("toggleControl failed", r.status); })
@@ -357,6 +355,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     };
 
     // ==== 2) LOG BOX QUI IGNORE LES LIGNES COMMENÇANT PAR "$" ====
+
     window.appendLog = function(txt) {
       if (!txt || txt.charAt(0) === '$') return;
       const l = document.getElementById('log');
@@ -364,7 +363,8 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       l.scrollTop = l.scrollHeight;
     };
 
-    // ==== 3) INITIALISATION DE LA MAP ====
+    // ==== 3) INITIALISATION BILLY MAP ====
+
     const canvas = document.getElementById('map'),
           ctx    = canvas.getContext('2d'),
           SCALE  = 25;  // 25 px = 1 m
@@ -410,14 +410,15 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       traj.push({px,py});
     }
 
-    // ==== 4) POLLING JSON À /telemetry toutes les 2 s ====
+    // ==== 4) MAJ telemetry toutes les 2 s ====
+
     let prevLog = "";
 
     function refreshTelemetry(){
       fetch('/telemetry')
         .then(r => r.json())
         .then(d => {
-          // -- Monitoring --
+
           document.getElementById('robot-state').innerText  = d.state;
           document.getElementById('battery').innerText      = d.battery;
           document.getElementById('sensor-left').innerText  = d.sensors.left;
@@ -435,18 +436,18 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
           }
           prevLog = d.log;
 
-          // -- Map --
           addPoint(d.pos.x, d.pos.y);
         })
         .catch(console.error);
     }
 
     // ==== 5) DÉMARRAGE AU LOAD ====
+
     window.addEventListener('load', () => {
       toggleControl(false);
       initMap();
-      refreshTelemetry();              // 1ère fois tout de suite
-      setInterval(refreshTelemetry, 2000); // puis toutes les 2 s
+      refreshTelemetry();              
+      setInterval(refreshTelemetry, 2000);
     });
   </script>
 
@@ -455,7 +456,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 // =============================================================================
-// === HANDLERS HTTP EXISTANTS ================================================
+// HANDLERS HTTP
 // =============================================================================
 
 void handleEvents(){
@@ -524,7 +525,7 @@ void handleSpeed(){
 }
 
 void handleTelemetry(){
-  // On renvoie simplement un JSON au client
+
   String s = String("{")
     + "\"state\":"      + robotState
     + ",\"battery\":0"
@@ -551,7 +552,7 @@ void handleTelemetry(){
 }
 
 // =============================================================================
-// === SETUP & LOOP ============================================================
+// SETUP & LOOP 
 // =============================================================================
 
 void setup(){
@@ -571,7 +572,6 @@ void setup(){
   server.on("/toggleControl",HTTP_GET, handleToggle);
   server.on("/cmd",          HTTP_GET, handleCmd);
   server.on("/setSpeed",     HTTP_GET, handleSpeed);
-  // la seule route JSON dont on a besoin :
   server.on("/telemetry",    HTTP_GET, handleTelemetry);
 
   server.begin();

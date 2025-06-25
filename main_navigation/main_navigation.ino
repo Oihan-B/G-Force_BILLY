@@ -9,8 +9,8 @@ const int NB_BOUTONS = 4;
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 bool    enSousMenu = false;
-uint8_t selMenu    = 0;    // 0..4
-uint8_t selSous    = 0;    // pour Config vitesse et Scenario 1
+uint8_t selMenu    = 0;    
+uint8_t selSous    = 0;    
 
 float vitesse = 0.25;
 float distance = 1000;
@@ -29,7 +29,6 @@ const char* menuPrincipal[NB_MENU] = {
 };
 
 // Nombre d'entrées dans chaque sous-menu (0 = action directe)
-
 const uint8_t tailleSousMenu[NB_MENU] = {
   0,  // Supervision BILLY
   8,  // Config vitesse
@@ -48,7 +47,6 @@ const char* sousMenuDistance[] = {
 };
 
 // Pointeurs vers chaque sous-menu (nullptr = pas de sous-menu)
-
 const char** tousSousMenus[NB_MENU] = {
   nullptr,
   sousMenuVitesse,
@@ -57,9 +55,11 @@ const char** tousSousMenus[NB_MENU] = {
   nullptr
 };
 
+
 // -----------------------------------------------------------------------------
 // Fonctions
 // -----------------------------------------------------------------------------
+
 
 // -----------------------------------------------------------------------------
 // Rafraîchissement de l'affichage
@@ -122,7 +122,6 @@ void boutonBas(){
   else                 wrapInc(selSous, tailleSousMenu[selMenu]);
   rafraichirMenu();
 }
-
 
 // -----------------------------------------------------------------------------
 // Bouton RETOUR
@@ -187,7 +186,7 @@ void boutonValider(){
       distance = (3.0f + 0.25f * selSous) * 1000;
       lcd.clear();
       lcd.setCursor(0,0);
-      lcd.print("Scenario 1:");
+      lcd.print("Scenario 1...");
       lcd.setCursor(0,1);
       lcd.print(distance/1000,2);
       lcd.print(" m en cours");
@@ -199,9 +198,11 @@ void boutonValider(){
   rafraichirMenu();
 }
 
+
 // -----------------------------------------------------------------------------
 // Setup
 // -----------------------------------------------------------------------------
+
 
 void setup(){
   for(int i = 0; i < NB_BOUTONS; i++){
@@ -223,9 +224,11 @@ void setup(){
   digitalWrite(GYROPHARE, LOW);
 }
 
+
 // -----------------------------------------------------------------------------
 // Loop 
 // -----------------------------------------------------------------------------
+
 
 void loop(){
   int b = boutonPresse();

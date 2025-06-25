@@ -155,7 +155,7 @@ void arreter(){
 }
 
 void tournerAngleD (float v, float coeff, float angle) {
-  v = v - 0.05;
+  v = 0.8 * v;
   float ang = angleTotal - angle * 0.95;
   tournerD(v, coeff);
   while (angleTotal > ang + 0.35){
@@ -165,7 +165,7 @@ void tournerAngleD (float v, float coeff, float angle) {
 }
 
 void tournerAngleG (float v, float coeff, float angle) {
-  v = v - 0.05;
+  v = 0.8 * v;
   float ang = angleTotal + angle * 0.95;
   tournerG(v, coeff);
   while (angleTotal < ang - 0.35){
@@ -196,10 +196,12 @@ void interruptionTimer(){
     
     distMoy = (distDroit+distGauche) / 2;
     distanceTotal += distMoy;
+
     if(distDroit>distGauche || distGauche>distDroit){
       dist = distDroit - distGauche;
       theta = dist / ENTRAXE;
     }
+
     angleTotal += theta * 2;
 
     /*
@@ -277,21 +279,21 @@ int distanceAtteinte(int dist){
 void runPidMoteurs(float cmdG, float cmdD) {
   int maxPWM = 200;
 
-  if(cmdG!=ancienConsigneGauche){
+  if(cmdG! = ancienConsigneGauche){
     pwm_Gauche = 0;
     ancienConsigneGauche = cmdG;
   }
 
-  if(cmdD!=ancienConsigneDroit){
+  if(cmdD != ancienConsigneDroit){
     pwm_Droit = 0;
     ancienConsigneDroit = cmdD;
   }
 
-  if (vitesseGauche < cmdG - marge)  pwm_Gauche=pwm_Gauche+5;
-  else if (vitesseGauche > cmdG + marge) pwm_Gauche=pwm_Gauche-5;
+  if (vitesseGauche < cmdG - marge)  pwm_Gauche = pwm_Gauche + 5;
+  else if (vitesseGauche > cmdG + marge) pwm_Gauche = pwm_Gauche - 5;
 
-  if (vitesseDroit < cmdD - marge)   pwm_Droit=pwm_Droit+5;
-  else if (vitesseDroit > cmdD + marge)   pwm_Droit=pwm_Droit-5;
+  if (vitesseDroit < cmdD - marge)   pwm_Droit = pwm_Droit + 5;
+  else if (vitesseDroit > cmdD + marge)   pwm_Droit = pwm_Droit - 5;
 
   pwm_Gauche = constrain(pwm_Gauche, -maxPWM, maxPWM);
   pwm_Droit  = constrain(pwm_Droit,  -maxPWM, maxPWM);
@@ -380,7 +382,7 @@ void lectureUSCD(){
   }
 }
 
-void lectureCapteurUltrason() {
+void lectureCapteurUltrason() { // PLUS UTILISE CAR TROP BLOQUANT
 
   unsigned long duree;
   float detection;
@@ -421,109 +423,32 @@ void lectureCapteurUltrason() {
 }
 
 void contournerObstacle(float vit) {
-
-  /*
-  arreter();
-  char suivi = suiviLigne();
-
-  if (CG != 0) {
-    if (CD !=0) {
-      gyro(1);
-      arreter();
-      return 1;
-    }
-    while(suivi=='S'){
-      suivi = suiviLigne();
-      if(AD || AG){
-        arreter();
-      }
-      else if(CG <= 7){
-        tournerD(vit, 0.75);
-      }
-      else if(CG >= 15){
-        tournerG(vit, 0.75);
-      }else{
-        avancer(vit);
-      }
-    }
-    tournerD(vit, 0.75);
-    delay(250);
-    return 0;
+  tournerAngleG(vit, 1, pi/2); // Tourner à gauche de 90° pour éviter l'obstacle
+  delay(1000);
+  avancerDist(vit, 500); // On avance manuellement pour être sûr que notre capteur droit récupère l'obstacle
+  avancer(vit); // Avancer pour s'éloigner de l'obstacle
+  while (CD != 0) { // On avance tant qu'on détecte l'obstacle
+    yield();
   }
-
-  while(suivi == 'S'){
-    suivi = suiviLigne();
-    if(AD || AG){
-      arreter();
-    }
-    else if(CD <= 7){
-      tournerG(vit, 0.75);
-    }
-    else if(CD >= 15){
-      tournerD(vit, 0.75);
-    }else{
-      avancer(vit);
-    }
+  //avancerDist(vit, 100);
+  tournerAngleD(vit, 1, pi/2); // On peut tourner à droit directement car le virage se fait côté extérieur, pas de risque que l'arrière du robot touche
+  delay(1000);
+  avancerDist(vit, 500);
+  avancer(vit); // Avancer pour s'éloigner de l'obstacle
+  while (CD != 0) { // On avance tant qu'on détecte l'obstacle
+    yield();
   }
-  tournerG(vit, 0.75);
-  delay(250);
-
-  return 0;
-  */
-  
-  arreter(); // Arrêter les moteurs pour éviter les collisions
-  avancerDist(vit, 100);
-  /*if (CG != 0) {
-    if (CD !=0) {
-      // Si l'obstacle est détecté à gauche et à droite, signaler avec le gyrophare
-      gyro(1); // Signalisation du blocage
-    }
-    tournerAngleD(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
-    delay(1000);
-    while (CG != 0) {
-      avancer(vit); // Avancer pour s'éloigner de l'obstacle
-    }
-    avancerDist(vit, 500);
-    tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
-    delay(1000);
-    while (CG != 0) {
-      avancer(vit); // Avancer pour s'éloigner de l'obstacle
-    }
-    tournerAngleG(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
-    delay(1000);
-    while (suiviLigne() == 'S') {
-      avancer(vit); // Avancer pour s'éloigner de l'obstacle
-    }
-    tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
-    delay(1000);
-  }*/
-
-    tournerAngleG(vit, 1, pi/2); // Tourner à droite pour éviter l'obstacle
-    delay(1000);
-    avancerDist(vit, 500);
-    avancer(vit); // Avancer pour s'éloigner de l'obstacle
-    while (CD != 0) {
-      yield();
-    }
-    //avancerDist(vit, 100);
-    tournerAngleD(vit, 1, pi/2); // Revenir à la trajectoire initiale
-    delay(1000);
-    avancerDist(vit, 500);
-    avancer(vit); // Avancer pour s'éloigner de l'obstacle
-    while (CD != 0) {
-      yield();
-    }
-    avancerDist(vit, 250);
-    tournerAngleD(vit, 1, pi/2); // Tourner à gauche pour reprendre la trajectoire
-    delay(1000);
-    avancer(vit); // Avancer pour s'éloigner de l'obstacle
-    while (suiviLigne() == 'S') {
-      yield();
-    }
-    avancerDist(vit, 50);
-    tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
-    delay(1000);
-  
+  avancerDist(vit, 250); // Une fois avoir dépassé l'obstacle quand on le longe de manière parallèle, on avance d'une grande distance de sécurité 
+                        // pour couvrir l'arrière du robot et anticiper le virage droit puis le virage intérieur gauche pour récupérer la ligne en parallèle
+  tournerAngleD(vit, 1, pi/2); // Tourner à droite pour longer le dernier côté de l'obstacle avant de récuperer la ligne
+  delay(1000);
+  avancer(vit); // Avancer pour s'éloigner de l'obstacle
+  while (suiviLigne() == 'S') { // On avance tant qu'on retrouve pas la ligne perpendiculairement
+    yield();
+  }
+  avancerDist(vit, 50); // On avance légèrement pour que le prochain virage positionne le centre de l'avant de BILLY directement sur la ligne
+  tournerAngleG(vit, 1, pi/2); // Revenir à la trajectoire initiale
+  delay(1000);
 }
 
 // -----------------------------------------------------------------------------
@@ -642,8 +567,7 @@ void afficherEcran(int duree, const char *txt1, const char *txt2, const char *tx
 void envoyerLogs(const char *log){
   Serial4.write(log);
   Serial4.write("\n");
-  delayMicroseconds(50);
-  Serial4.flush();
+  delayMicroseconds(50); // S'assurer que les logs s'envoient correctement
 }
 
 int confirmationCourrier(){
@@ -653,7 +577,7 @@ int confirmationCourrier(){
   int aff = 0;
   while(btn != 7){
     btn = boutonPresse();
-    if((millis() - tempsAttente > 60000) && aff == 0){
+    if((millis() - tempsAttente > 60000) && aff == 0){ // Easter Egg du projet BILLY, l'utilisateur n'a que 60 secondes pour récuperer le colis avant de se prendre un coup de pression
       afficherEcran(0, "AUTODESTRUCTION", "EN", "COURS !  ", "3, 2, 1 ...");
       aff = 1;
     }
@@ -685,10 +609,9 @@ void controleManuel(float vit){
       }
 
       if (AG != 0 || AD != 0){
-        envoyerLogs("\nObstacle detectée, interruption automatique du contrôle manuel !");
+        envoyerLogs("\nObstacle detectée, interruption automatique du contrôle manuel !"); // L'utilisateur peut quand même forcer et reprendre le contrôle
         arreter();
         gyro(1);
-        break;
       }
   
       if (c == 'A') {
@@ -698,10 +621,10 @@ void controleManuel(float vit){
         reculer(vit);
       }
       else if (c == 'G') {
-        tournerG(vit, 0.75);
+        tournerG(vit, 0.6);
       }
       else if (c == 'D') {
-        tournerD(vit, 0.75);
+        tournerD(vit, 0.6);
       }
       else if (c == 'S') {
         arreter();
@@ -709,7 +632,6 @@ void controleManuel(float vit){
       else if (c == 'B'){
         gyro(!etatGyro);
       }
-      Serial4.flush(); 
       yield();
     }
     break;
@@ -741,3 +663,4 @@ void actualiserSiteWeb(int etatRobot, float vitD, float vitG, float posX, float 
 
   Serial4.write(buf, len);
 }
+// 666 le nombre du diable bouahhahaa

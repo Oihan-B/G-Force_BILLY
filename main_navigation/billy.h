@@ -7,7 +7,7 @@
 // VARIABLES GLOBALES
 // -----------------------------------------------------------------------------
 
-#define SPEED 0.3               // Consigne de vitesse par défaut, utilisé par le PID pour ajuster le signal PWM des moteurs
+#define SPEED 0.25              // Consigne de vitesse par défaut, utilisé par le PID pour ajuster le signal PWM des moteurs
 
 #define ENTRAXE 320             // Écart entre les 2 roues
 #define NB_TIC 1560             // Nombre de tics par tours de roues
@@ -31,11 +31,11 @@ extern volatile double vitesseGauche;
 extern volatile double pwm_Droit;
 extern volatile double pwm_Gauche;
 extern volatile double intervalle;
-extern volatile double distanceTotal;  // mm
-extern volatile float angleTotal;     // radians
-extern volatile double x;              // mm
-extern volatile double y;              // mm
-extern volatile double theta;          // radian 
+extern volatile double distanceTotal;   // mm
+extern volatile float angleTotal;       // radians
+extern volatile double x;               // mm
+extern volatile double y;               // mm
+extern volatile double theta;           // radians
 
 extern float  marge;
 extern double ancienConsigneDroit;
@@ -87,19 +87,24 @@ void tournerG (float v, float coeff);                         //Fait tourner à 
 void tournerDsoft(float v, float coeff);                      //Fait tourner à droite le robot par différentiel de vitesses, sens de rotation identique des 2 roues
 void tournerGsoft(float v, float coeff);                      //Fait tourner à gauche le robot par différentiel de vitesses, sens de rotation identique des 2 roues
 void arreter();                                               //Réinitialise les consignes de vitesses à 0 pour arrêter le robot
-void tournerAngleD (float v, float coeff, float angle);       //Fait pivoter le robot d'un angle donné vers la droite
-void tournerAngleG (float v, float coeff, float angle);       //Fait pivoter le robot d'un angle donné vers la gauche
+void tournerAngleD (float v, float coeff, float angle);       //Fait pivoter le robot d'un angle donné vers la droite, vitesse légèrement plus faible que consigne
+void tournerAngleG (float v, float coeff, float angle);       //Fait pivoter le robot d'un angle donné vers la gauche, vitesse légèrement plus faible que consigne
 
 // -----------------------------------------------------------------------------
 // Fonctions Odometrie
 // -----------------------------------------------------------------------------
 
 void initEncodeurs();                       //Initialise les PINs relatives aux encodeurs, A et B avec un attachInterrupt pour faire appel aux fonctions compterDroit / compterGauche à chaque variation
-void interruptionTimer();                   //Fonction executée par le timer, calculs d'odométrie, lancement du PID, actualisation du site web...
 void compterDroit();                        //Actualise la distance parcourue par le moteur droit en fontion des retours encodeurs (de combien la roue a tourné)
 void compterGauche();                       //Actualise la distance parcourue par le moteur gauche en fontion des retours encodeurs (de combien la roue a tourné)
 void avancerDist(float vit, float dist);    //Fonction bloquante qui avance en boucle dans que la distance de consigne n'est pas atteinte
 int distanceAtteinte(int dist);             //Compare une distance de consigne avec la distance parcourue de réference pour vérifier si un objectif a été atteint
+
+// -----------------------------------------------------------------------------
+// TIMER
+// -----------------------------------------------------------------------------
+
+void interruptionTimer();                   //Fonction executée par le timer, calculs d'odométrie, lancement du PID, lancements triggers capteurs ultrason, actualisation site web...
 
 // -----------------------------------------------------------------------------
 // PID
@@ -111,13 +116,13 @@ void runPidMoteurs(float cmdG, float cmdD);    //Adapte le signal pwm de chaque 
 // Detection Obstacles
 // -----------------------------------------------------------------------------
 
-void initCapteurUltrason();                                //Initialise les PINs relatives aux capteurs, un TRIGGER commun en OUTPUT et les ECHOs de chaque capteur en INPUT
-void lectureUSCG();
-void lectureUSAG();
-void lectureUSAD();
-void lectureUSCD();
-void lectureCapteurUltrason();       //Renvoie la donnée lu par un capteur si 5 < detection < 40 sinon renvoie 0, on fait size lectures pour et conserve le min pour éviter un éventuel bruit dans la lecture
-void contournerObstacle(float vit);                                 //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
+void initCapteurUltrason();                                //Initialise les PINs relatives aux capteurs, un TRIGGER commun en OUTPUT et les ECHOs de chaque capteur en INPUT + configuration attachInterrupt
+void lectureUSCG();                                        //Fonction non bloquante pour la lecture de données capteurs, trigger lancés par timer et lancement de fonction sur changement d'état du capteur uniquement 
+void lectureUSAG();                                        //Fonction non bloquante pour la lecture de données capteurs, trigger lancés par timer et lancement de fonction sur changement d'état du capteur uniquement 
+void lectureUSAD();                                        //Fonction non bloquante pour la lecture de données capteurs, trigger lancés par timer et lancement de fonction sur changement d'état du capteur uniquement 
+void lectureUSCD();                                        //Fonction non bloquante pour la lecture de données capteurs, trigger lancés par timer et lancement de fonction sur changement d'état du capteur uniquement 
+void lectureCapteurUltrason();                             //Renvoie la donnée lu par un capteur si 5 < detection < 40 sinon renvoie 0, on fait size lectures pour et conserve le min pour éviter un éventuel bruit dans la lecture
+void contournerObstacle(float vit);                        //Contourner l'obstacles une fois détectée en le longant en suivant ses côtés avec une marge de sécurité puis en reprenant la ligne
 
 // -----------------------------------------------------------------------------
 // Suivi Lignes
